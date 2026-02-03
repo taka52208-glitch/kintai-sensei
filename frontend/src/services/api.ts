@@ -26,12 +26,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    // 401エラー時の処理
-    if (error.response?.status === 401) {
-      // リフレッシュトークンでの再取得を試みる（今後実装）
-      // 失敗したらログアウト
+    const requestUrl = error.config?.url || '';
+
+    // 401エラー時の処理（ログインAPI以外）
+    if (error.response?.status === 401 && !requestUrl.includes('/auth/login')) {
+      // ログアウト処理
       useAuthStore.getState().clearAuth();
-      window.location.href = '/login';
+      // 現在のパスがlogin以外の場合のみリダイレクト
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);
