@@ -52,6 +52,12 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Rehydration完了後にisLoadingをfalseに
+        if (state) {
+          state.setLoading(false);
+        }
+      },
     }
   )
 );
