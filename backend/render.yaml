@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kintai-sensei-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+    healthCheckPath: /api/health

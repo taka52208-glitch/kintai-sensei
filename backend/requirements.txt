@@ -1,0 +1,41 @@
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+
+# Database
+sqlalchemy==2.0.35
+asyncpg==0.30.0
+aiosqlite==0.20.0
+alembic==1.14.0
+
+# Validation
+pydantic==2.10.0
+pydantic-settings==2.6.0
+email-validator==2.2.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.0
+python-multipart==0.0.12
+
+# AI API
+openai==1.56.0
+
+# CSV Processing
+pandas==2.2.0
+chardet==5.2.0
+
+# PDF Generation
+reportlab==4.2.0
+
+# Utilities
+python-dotenv==1.0.1
+httpx==0.28.0
+
+# Serverless Adapter
+mangum==0.19.0
+
+# Development
+pytest==8.3.0
+pytest-asyncio==0.24.0
+ruff==0.8.0
