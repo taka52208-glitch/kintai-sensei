@@ -56,7 +56,7 @@ def generate_internal_template(
     """社内記録用テンプレート（簡潔）"""
     employee = issue.attendance_record.employee
     date_str = str(issue.attendance_record.date)
-    issue_type = ISSUE_TYPE_LABELS.get(issue.type.value, issue.type.value)
+    issue_type = ISSUE_TYPE_LABELS.get(issue.type, issue.type)
 
     text = f"""【勤怠異常対応記録】
 
@@ -87,7 +87,7 @@ def generate_employee_template(
     """本人確認用テンプレート（丁寧）"""
     employee = issue.attendance_record.employee
     date_str = str(issue.attendance_record.date)
-    issue_type = ISSUE_TYPE_LABELS.get(issue.type.value, issue.type.value)
+    issue_type = ISSUE_TYPE_LABELS.get(issue.type, issue.type)
 
     text = f"""{employee.name} 様
 
@@ -127,7 +127,7 @@ def generate_audit_template(
     """監査向けテンプレート（客観・事実ベース）"""
     employee = issue.attendance_record.employee
     date_str = str(issue.attendance_record.date)
-    issue_type = ISSUE_TYPE_LABELS.get(issue.type.value, issue.type.value)
+    issue_type = ISSUE_TYPE_LABELS.get(issue.type, issue.type)
 
     text = f"""勤怠異常是正報告書
 

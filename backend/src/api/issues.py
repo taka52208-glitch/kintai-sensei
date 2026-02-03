@@ -66,9 +66,9 @@ def build_issue_response(issue: Issue) -> IssueResponse:
         store_id=str(employee.store_id),
         store_name=employee.store.name if employee.store else "",
         date=str(attendance.date),
-        type=issue.type.value,
-        severity=issue.severity.value,
-        status=issue.status.value,
+        type=issue.type if isinstance(issue.type, str) else issue.type.value,
+        severity=issue.severity if isinstance(issue.severity, str) else issue.severity.value,
+        status=issue.status if isinstance(issue.status, str) else issue.status.value,
         rule_description=issue.rule_description,
         detected_at=issue.detected_at,
         attendance_record=attendance_response,
@@ -143,7 +143,7 @@ async def list_issues(
 
 @router.get("/{issue_id}", response_model=IssueResponse)
 async def get_issue(
-    issue_id: UUID,
+    issue_id: str,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: CurrentUser,
 ):
@@ -176,7 +176,7 @@ async def get_issue(
 
 @router.put("/{issue_id}", response_model=IssueResponse)
 async def update_issue(
-    issue_id: UUID,
+    issue_id: str,
     request: IssueUpdateRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: StoreManagerUser,
@@ -217,7 +217,7 @@ async def update_issue(
 
 @router.post("/{issue_id}/logs", response_model=IssueLogResponse)
 async def add_issue_log(
-    issue_id: UUID,
+    issue_id: str,
     request: IssueLogCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: StoreManagerUser,
@@ -251,7 +251,7 @@ async def add_issue_log(
 
 @router.post("/{issue_id}/reason", response_model=GenerateReasonResponse)
 async def generate_reason(
-    issue_id: UUID,
+    issue_id: str,
     request: GenerateReasonRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: StoreManagerUser,

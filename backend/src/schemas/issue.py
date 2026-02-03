@@ -2,10 +2,20 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
-class AttendanceRecordResponse(BaseModel):
+class CamelCaseModel(BaseModel):
+    """camelCase出力用の基底クラス"""
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+
+class AttendanceRecordResponse(CamelCaseModel):
     """勤怠レコードレスポンス"""
     id: str
     date: str
@@ -14,11 +24,8 @@ class AttendanceRecordResponse(BaseModel):
     break_minutes: int | None
     work_type: str | None
 
-    class Config:
-        from_attributes = True
 
-
-class IssueLogResponse(BaseModel):
+class IssueLogResponse(CamelCaseModel):
     """対応ログレスポンス"""
     id: str
     user_id: str
@@ -27,11 +34,8 @@ class IssueLogResponse(BaseModel):
     memo: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
 
-
-class IssueResponse(BaseModel):
+class IssueResponse(CamelCaseModel):
     """異常レスポンス"""
     id: str
     attendance_record_id: str
@@ -48,11 +52,8 @@ class IssueResponse(BaseModel):
     attendance_record: AttendanceRecordResponse | None = None
     logs: list[IssueLogResponse] = []
 
-    class Config:
-        from_attributes = True
 
-
-class IssueListResponse(BaseModel):
+class IssueListResponse(CamelCaseModel):
     """異常一覧レスポンス"""
     items: list[IssueResponse]
     total: int
@@ -73,6 +74,10 @@ class IssueLogCreate(BaseModel):
 
 class GenerateReasonRequest(BaseModel):
     """是正理由文生成リクエスト"""
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
     template_type: str  # internal, employee, audit
     cause_category: str  # forgot_clock, device_issue, etc.
     cause_detail: str | None = None
@@ -80,7 +85,7 @@ class GenerateReasonRequest(BaseModel):
     prevention: str  # operation_notice, etc.
 
 
-class GenerateReasonResponse(BaseModel):
+class GenerateReasonResponse(CamelCaseModel):
     """是正理由文生成レスポンス"""
     generated_text: str
     correction_reason_id: str

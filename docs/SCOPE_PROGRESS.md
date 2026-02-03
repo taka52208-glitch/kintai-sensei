@@ -53,12 +53,12 @@
 | /api/users/{id} | GET/PUT/DELETE | ユーザー詳細 | [x] | [ ] |
 | /api/stores | GET/POST | 店舗一覧/作成 | [x] | [ ] |
 | /api/stores/{id} | GET/PUT/DELETE | 店舗詳細 | [x] | [ ] |
-| /api/attendance/upload | POST | CSV取り込み | [x] | [ ] |
-| /api/attendance/preview | POST | CSVプレビュー | [x] | [ ] |
+| /api/attendance/upload | POST | CSV取り込み | [x] | [x] |
+| /api/attendance/preview | POST | CSVプレビュー | [x] | [x] |
 | /api/issues | GET | 異常一覧 | [x] | [x] |
-| /api/issues/{id} | GET/PUT | 異常詳細/更新 | [x] | [ ] |
-| /api/issues/{id}/logs | GET/POST | 対応ログ | [x] | [ ] |
-| /api/issues/{id}/reason | POST | 是正理由文生成 | [x] | [ ] |
+| /api/issues/{id} | GET/PUT | 異常詳細/更新 | [x] | [x] |
+| /api/issues/{id}/logs | GET/POST | 対応ログ | [x] | [x] |
+| /api/issues/{id}/reason | POST | 是正理由文生成 | [x] | [x] |
 | /api/reports | POST | レポート生成 | [x] | [ ] |
 | /api/settings/rules | GET/PUT | 検知ルール設定 | [x] | [ ] |
 | /api/settings/templates | GET/PUT | テンプレート設定 | [x] | [ ] |
@@ -74,7 +74,7 @@
 | 基盤構築完了 | Phase 3-4 | ✅ 完了 |
 | 本番デプロイ | Vercel + Render | ✅ 完了 |
 | ログイン機能 | 認証フロー動作 | ✅ 完了 |
-| コア機能完了 | CSV取込+検知+理由文生成 | 🔄 進行中 |
+| コア機能完了 | CSV取込+検知+理由文生成 | ✅ 完了 |
 | MVP完成 | 全7ページ動作 | 🔄 進行中 |
 
 ---
@@ -121,9 +121,9 @@ PYTHONPATH=. uvicorn main:app --reload --port 8634
 
 ## 次のステップ
 
-1. [ ] CSV取り込み機能の実装・テスト
-2. [ ] 異常検知ロジックの動作確認
-3. [ ] 是正理由文生成機能の実装
+1. [x] CSV取り込み機能の実装・テスト ✅
+2. [x] 異常検知ロジックの動作確認 ✅
+3. [x] 是正理由文生成機能の実装 ✅
 4. [ ] レポート出力機能の実装
 5. [ ] 店舗・ユーザー管理画面の完成
 6. [ ] 設定画面の完成

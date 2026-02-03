@@ -74,7 +74,7 @@ export default function DashboardPage() {
   const uploadMutation = useMutation({
     mutationFn: (file: File) => attendanceApi.upload(file, ''),
     onSuccess: (data) => {
-      setUploadSuccess(`${data.recordCount}件の勤怠データを取り込み、${data.issueCount}件の異常を検知しました`);
+      setUploadSuccess(`${data.record_count}件の勤怠データを取り込み、${data.issue_count}件の異常を検知しました`);
       setUploadError('');
       queryClient.invalidateQueries({ queryKey: ['issues'] });
     },
