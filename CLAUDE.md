@@ -192,16 +192,19 @@ cd backend && pytest
 ### フロントエンド
 - **URL**: https://kintai-sensei.vercel.app
 - **プラットフォーム**: Vercel (無料枠)
-- **ステータス**: デプロイ完了
+- **ステータス**: 稼働中
 
 ### バックエンド
-- **推奨プラットフォーム**: Render.com
-- **設定ファイル**: `backend/render.yaml`
-- **詳細手順**: `docs/DEPLOYMENT.md`
+- **URL**: https://kintai-sensei-api.onrender.com
+- **プラットフォーム**: Render.com (無料枠)
+- **ステータス**: 稼働中
+
+### GitHubリポジトリ
+- **URL**: https://github.com/taka52208-glitch/kintai-sensei
 
 ---
 
 *最終更新: 2026-02-04*
 *Phase 1: 要件定義 完了*
-*Phase 2: 基盤構築 完了（DB初期化・認証API動作確認済み）*
-*Phase 3: フロントエンドデプロイ完了*
+*Phase 2: 基盤構築 完了*
+*Phase 3: 本番デプロイ完了（フロントエンド + バックエンド）*
