@@ -2,8 +2,8 @@
 // process.envはここ経由でのみアクセス
 
 export const config = {
-  // API
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8634',
+  // API - 本番ではVercel rewritesを使用するため空文字
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:8634'),
 
   // アプリ設定
   appName: '勤怠チェック',
