@@ -9,15 +9,8 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: kintai-sensei-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
-
-databases:
-  - name: kintai-sensei-db
-    plan: free
-    region: singapore
