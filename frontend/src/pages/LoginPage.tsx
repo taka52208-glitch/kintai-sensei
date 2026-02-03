@@ -28,28 +28,33 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('Attempting login...');
       const response = await authApi.login(email, password);
+      console.log('Login response:', response);
       // バックエンドのsnake_caseをフロントエンドのcamelCaseに変換
       const user = {
         id: response.user.id,
         email: response.user.email,
         name: response.user.name,
-        role: response.user.role,
+        role: response.user.role as 'admin' | 'store_manager' | 'viewer',
         storeId: response.user.store_id,
         storeName: response.user.store_name,
         isActive: true,
         createdAt: new Date().toISOString(),
       };
+      console.log('Setting auth with user:', user);
       setAuth(user, response.access_token);
+      console.log('Navigating to dashboard...');
       navigate('/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number } };
+      console.error('Login error:', err);
+      const error = err as { response?: { status?: number; data?: unknown }; message?: string };
       if (error.response?.status === 401) {
         setError('メールアドレスまたはパスワードが正しくありません');
       } else if (error.response?.status === 429) {
         setError('ログイン試行回数が上限に達しました。しばらく待ってからお試しください');
       } else {
-        setError('ログインに失敗しました。もう一度お試しください');
+        setError(`ログインエラー: ${error.message || JSON.stringify(error.response?.data) || '不明なエラー'}`);
       }
     } finally {
       setLoading(false);
