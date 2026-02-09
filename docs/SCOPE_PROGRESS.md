@@ -9,6 +9,7 @@
 - [x] Phase 5: 機能実装
 - [x] Phase 6: 本番デプロイ
 - [x] Phase 7: 販売準備（法務・LP・決済・KPI）
+- [x] Phase 8: 販売開始（ローンチ）
 
 ---
 
@@ -95,6 +96,10 @@
 | X(Twitter)・noteアカウント開設 | 完了 |
 | note記事1本目（是正勧告対応ガイド） | 完了 |
 | 競合分析（ジョブカン・KING OF TIME） | 完了 |
+| note記事2本目（8つの法令違反） | 完了 |
+| 無料モニター募集テンプレート | 完了 |
+| 社労士ヒアリングシート | 完了 |
+| X(Twitter)ローンチ投稿テンプレート | 完了 |
 
 ---
 
@@ -105,6 +110,9 @@
 | docs/content/note-article-01-zesei-kankoku.md | note記事「是正勧告の対応方法を5ステップで解説」 | 完了（noteへ投稿待ち） |
 | docs/content/note-article-02-8violations.md | note記事「飲食店の勤怠管理で見逃しがちな8つの法令違反」 | 完了（noteへ投稿待ち） |
 | docs/content/competitive-analysis.md | 競合分析レポート（ジョブカン・KING OF TIME・市場動向） | 完了 |
+| docs/content/monitor-recruitment.md | 無料モニター募集テンプレート（メール/DM/SNS用） | 完了 |
+| docs/content/sharoushi-hearing-sheet.md | 社労士パートナー候補ヒアリングシート | 完了 |
+| docs/content/launch-posts.md | X(Twitter)ローンチ投稿テンプレート（6本） | 完了 |
 
 ---
 
@@ -120,6 +128,7 @@
 | MVP全ページ動作 | 完了 |
 | 販売基盤準備（法務+決済+LP） | 完了 |
 | コンテンツマーケ開始（note記事・競合分析） | 完了 |
+| 販売開始（営業資料・ローンチ投稿準備） | 完了 |
 
 ---
 
@@ -174,4 +183,4 @@ PYTHONPATH=. uvicorn main:app --reload --port 8634
 
 ---
 
-*最終更新: 2026-02-07*
+*最終更新: 2026-02-09*
