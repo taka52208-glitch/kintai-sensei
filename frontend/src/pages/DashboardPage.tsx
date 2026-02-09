@@ -317,6 +317,7 @@ export default function DashboardPage() {
               </Typography>
             </Box>
           ) : (
+            <>
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
@@ -388,6 +389,7 @@ export default function DashboardPage() {
                 `${from}-${to} / ${count !== -1 ? count : `${to}+`}件`
               }
             />
+            </>
           )}
         </CardContent>
       </Card>
