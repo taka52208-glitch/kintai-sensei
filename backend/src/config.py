@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """環境変数から設定を読み込む"""
 
     # アプリケーション
-    app_name: str = "勤怠チェック"
+    app_name: str = "勤怠先生"
     debug: bool = False
 
     # データベース（デフォルトはSQLite）
