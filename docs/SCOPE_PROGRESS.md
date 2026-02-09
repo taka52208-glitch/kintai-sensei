@@ -103,6 +103,7 @@
 | ファイル | 内容 | 状態 |
 |---------|------|------|
 | docs/content/note-article-01-zesei-kankoku.md | note記事「是正勧告の対応方法を5ステップで解説」 | 完了（noteへ投稿待ち） |
+| docs/content/note-article-02-8violations.md | note記事「飲食店の勤怠管理で見逃しがちな8つの法令違反」 | 完了（noteへ投稿待ち） |
 | docs/content/competitive-analysis.md | 競合分析レポート（ジョブカン・KING OF TIME・市場動向） | 完了 |
 
 ---
