@@ -21,9 +21,17 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          # postgresql+asyncpg:// → postgresql:// に変換（SQLAlchemy形式対応）
+          CLEAN_URL=$(echo "${DATABASE_URL}" | sed 's|postgresql+asyncpg://|postgresql://|')
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           FILENAME="kintai_sensei_backup_${TIMESTAMP}.sql.gz"
-          pg_dump "${DATABASE_URL}" | gzip > "${FILENAME}"
+          pg_dump "${CLEAN_URL}" 2>&1 | gzip > "${FILENAME}"
+          DUMP_EXIT=${PIPESTATUS[0]}
+          if [ $DUMP_EXIT -ne 0 ]; then
+            echo "::error::pg_dump failed with exit code ${DUMP_EXIT}"
+            zcat "${FILENAME}" 2>/dev/null || true
+            exit 1
+          fi
           echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
           echo "Backup created: ${FILENAME} ($(du -h ${FILENAME} | cut -f1))"
 
