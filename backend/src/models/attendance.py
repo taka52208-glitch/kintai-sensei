@@ -23,7 +23,7 @@ class AttendanceRecord(Base):
     clock_out: Mapped[time | None] = mapped_column(Time, nullable=True)
     break_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     work_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    imported_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    imported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # リレーション
     employee = relationship("Employee", back_populates="attendance_records")

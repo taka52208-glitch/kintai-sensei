@@ -23,8 +23,8 @@ def upgrade() -> None:
         'organizations',
         sa.Column('id', sa.String(36), primary_key=True),
         sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Stores
@@ -34,8 +34,8 @@ def upgrade() -> None:
         sa.Column('organization_id', sa.String(36), sa.ForeignKey('organizations.id'), nullable=False),
         sa.Column('code', sa.String(20), nullable=False),
         sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Users
@@ -50,9 +50,9 @@ def upgrade() -> None:
         sa.Column('role', sa.String(20), nullable=False),
         sa.Column('is_active', sa.Boolean(), default=True),
         sa.Column('failed_login_attempts', sa.Integer(), default=0),
-        sa.Column('locked_until', sa.DateTime(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('locked_until', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Employees
@@ -63,8 +63,8 @@ def upgrade() -> None:
         sa.Column('store_id', sa.String(36), sa.ForeignKey('stores.id'), nullable=False),
         sa.Column('employee_code', sa.String(50), nullable=False),
         sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Attendance Records
@@ -77,7 +77,7 @@ def upgrade() -> None:
         sa.Column('clock_out', sa.Time(), nullable=True),
         sa.Column('break_minutes', sa.Integer(), nullable=True),
         sa.Column('work_type', sa.String(20), nullable=True),
-        sa.Column('imported_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('imported_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Issues
@@ -89,7 +89,7 @@ def upgrade() -> None:
         sa.Column('severity', sa.String(10), nullable=False),
         sa.Column('status', sa.String(20), nullable=False, server_default='pending'),
         sa.Column('rule_description', sa.Text(), nullable=False),
-        sa.Column('detected_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('detected_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Issue Logs
@@ -100,7 +100,7 @@ def upgrade() -> None:
         sa.Column('user_id', sa.String(36), sa.ForeignKey('users.id'), nullable=False),
         sa.Column('action', sa.String(50), nullable=False),
         sa.Column('memo', sa.Text(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Correction Reasons
@@ -115,7 +115,7 @@ def upgrade() -> None:
         sa.Column('prevention', sa.String(30), nullable=False),
         sa.Column('generated_text', sa.Text(), nullable=False),
         sa.Column('created_by', sa.String(36), sa.ForeignKey('users.id'), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Detection Rules
@@ -128,8 +128,8 @@ def upgrade() -> None:
         sa.Column('daily_work_hours_alert', sa.Integer(), default=10),
         sa.Column('night_start_hour', sa.Integer(), default=22),
         sa.Column('night_end_hour', sa.Integer(), default=5),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Reason Templates
@@ -139,8 +139,8 @@ def upgrade() -> None:
         sa.Column('organization_id', sa.String(36), sa.ForeignKey('organizations.id'), nullable=False),
         sa.Column('template_type', sa.String(20), nullable=False),
         sa.Column('template_text', sa.Text(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
     # Vocabulary Dicts
@@ -150,7 +150,7 @@ def upgrade() -> None:
         sa.Column('organization_id', sa.String(36), sa.ForeignKey('organizations.id'), nullable=False),
         sa.Column('original_word', sa.String(100), nullable=False),
         sa.Column('replacement_word', sa.String(100), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
 
