@@ -27,7 +27,7 @@ jobs:
           CLEAN_URL=$(echo "${DATABASE_URL}" | sed 's|postgresql+asyncpg://|postgresql://|')
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           FILENAME="kintai_sensei_backup_${TIMESTAMP}.sql.gz"
-          pg_dump "${CLEAN_URL}" 2>&1 | gzip > "${FILENAME}"
+          /usr/lib/postgresql/17/bin/pg_dump "${CLEAN_URL}" 2>&1 | gzip > "${FILENAME}"
           DUMP_EXIT=${PIPESTATUS[0]}
           if [ $DUMP_EXIT -ne 0 ]; then
             echo "::error::pg_dump failed with exit code ${DUMP_EXIT}"
