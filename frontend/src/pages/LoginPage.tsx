@@ -48,7 +48,7 @@ export default function LoginPage() {
         isActive: true,
         createdAt: new Date().toISOString(),
       };
-      setAuth(user, response.access_token);
+      setAuth(user, response.access_token, response.refresh_token);
       navigate('/dashboard');
     } catch (err: unknown) {
       const error = err as { response?: { status?: number; data?: unknown }; message?: string };

@@ -1,12 +1,23 @@
 """認証スキーマ"""
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class LoginRequest(BaseModel):
     """ログインリクエスト"""
     email: EmailStr
     password: str
+
+
+def _validate_password(v: str) -> str:
+    """パスワード強度バリデーション"""
+    if len(v) < 8:
+        raise ValueError("パスワードは8文字以上必要です")
+    if not any(c.isupper() for c in v):
+        raise ValueError("パスワードに大文字を含めてください")
+    if not any(c.isdigit() for c in v):
+        raise ValueError("パスワードに数字を含めてください")
+    return v
 
 
 class SignupRequest(BaseModel):
@@ -16,18 +27,10 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str
 
+    @field_validator("password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("パスワードは8文字以上必要です")
-        if not any(c.isupper() for c in v):
-            raise ValueError("パスワードに大文字を含めてください")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("パスワードに数字を含めてください")
-        return v
-
-    def model_post_init(self, __context: object) -> None:
-        self.validate_password_strength(self.password)
+        return _validate_password(v)
 
 
 class UserInfo(BaseModel):
@@ -39,8 +42,7 @@ class UserInfo(BaseModel):
     store_id: str | None
     store_name: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class LoginResponse(BaseModel):
@@ -50,6 +52,28 @@ class LoginResponse(BaseModel):
     user: UserInfo
 
 
+class TokenRefreshRequest(BaseModel):
+    """トークンリフレッシュリクエスト"""
+    refresh_token: str
+
+
 class TokenRefreshResponse(BaseModel):
     """トークンリフレッシュレスポンス"""
     access_token: str
+
+
+class LogoutRequest(BaseModel):
+    """ログアウトリクエスト"""
+    access_token: str | None = None
+    refresh_token: str | None = None
+
+
+class ChangePasswordRequest(BaseModel):
+    """パスワード変更リクエスト"""
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        return _validate_password(v)

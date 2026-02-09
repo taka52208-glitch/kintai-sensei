@@ -1,7 +1,10 @@
 """アプリケーション設定"""
 
+import warnings
 from functools import lru_cache
 from pydantic_settings import BaseSettings
+
+_INSECURE_DEFAULT_SECRET = "your-secret-key-change-in-production"
 
 
 class Settings(BaseSettings):
@@ -52,7 +55,19 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """シングルトンで設定を取得"""
-    return Settings()
+    s = Settings()
+    if s.jwt_secret_key == _INSECURE_DEFAULT_SECRET:
+        if s.debug:
+            warnings.warn(
+                "JWT_SECRET_KEY がデフォルト値です。本番環境では必ず変更してください。",
+                stacklevel=2,
+            )
+        else:
+            raise RuntimeError(
+                "JWT_SECRET_KEY がデフォルト値のまま起動しています。"
+                "環境変数 JWT_SECRET_KEY を設定してください。"
+            )
+    return s
 
 
 settings = get_settings()

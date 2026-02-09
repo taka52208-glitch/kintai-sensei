@@ -22,7 +22,7 @@ import {
   CreditCard as CreditCardIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { settingsApi, billingApi } from '../services/api';
+import { settingsApi, billingApi, authApi } from '../services/api';
 import { useIsAdmin } from '../stores/authStore';
 
 interface TabPanelProps {
@@ -53,6 +53,12 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // パスワード変更
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Stripe決済結果のフィードバック
   useEffect(() => {
@@ -139,6 +145,7 @@ export default function SettingsPage() {
             <Tab label="テンプレート" disabled={!isAdmin} />
             <Tab label="語彙辞書" disabled={!isAdmin} />
             <Tab label="プラン・課金" disabled={!isAdmin} />
+            <Tab label="アカウント" />
           </Tabs>
 
           {/* 検知ルール */}
@@ -249,6 +256,79 @@ export default function SettingsPage() {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
               ※ 詳細な語彙辞書編集機能は今後実装予定です
             </Typography>
+          </TabPanel>
+
+          {/* アカウント（パスワード変更） */}
+          <TabPanel value={tabValue} index={4}>
+            <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+              パスワード変更
+            </Typography>
+            <Box sx={{ maxWidth: 400 }}>
+              <TextField
+                fullWidth
+                type="password"
+                label="現在のパスワード"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                margin="normal"
+                size="small"
+                autoComplete="current-password"
+              />
+              <TextField
+                fullWidth
+                type="password"
+                label="新しいパスワード"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                margin="normal"
+                size="small"
+                autoComplete="new-password"
+                helperText="8文字以上、大文字・数字を含む"
+              />
+              <TextField
+                fullWidth
+                type="password"
+                label="新しいパスワード（確認）"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                margin="normal"
+                size="small"
+                autoComplete="new-password"
+                error={confirmPassword.length > 0 && newPassword !== confirmPassword}
+                helperText={confirmPassword.length > 0 && newPassword !== confirmPassword ? 'パスワードが一致しません' : ''}
+              />
+              <Button
+                variant="contained"
+                sx={{ mt: 2 }}
+                disabled={
+                  passwordLoading ||
+                  !currentPassword ||
+                  newPassword.length < 8 ||
+                  !/[A-Z]/.test(newPassword) ||
+                  !/[0-9]/.test(newPassword) ||
+                  newPassword !== confirmPassword
+                }
+                onClick={async () => {
+                  setPasswordLoading(true);
+                  try {
+                    await authApi.changePassword(currentPassword, newPassword);
+                    setSuccess('パスワードを変更しました');
+                    setError('');
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  } catch (err: unknown) {
+                    const e = err as { response?: { data?: { detail?: string } } };
+                    setError(e.response?.data?.detail || 'パスワード変更に失敗しました');
+                    setSuccess('');
+                  } finally {
+                    setPasswordLoading(false);
+                  }
+                }}
+              >
+                {passwordLoading ? <CircularProgress size={20} /> : 'パスワードを変更'}
+              </Button>
+            </Box>
           </TabPanel>
 
           {/* プラン・課金 */}

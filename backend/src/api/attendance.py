@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.core.auth import StoreManagerUser
 from src.models.employee import Employee
+from src.models.store import Store
 from src.models.attendance import AttendanceRecord
 from src.services.detection import detect_issues
 from src.services.plan_limits import check_employee_limit
@@ -141,6 +142,20 @@ async def upload_attendance(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"行数が上限（{MAX_ROW_COUNT}行）を超えています（{len(df)}行）",
         )
+
+    # store_id所有権検証
+    if store_id:
+        result = await db.execute(
+            select(Store).where(
+                Store.id == store_id,
+                Store.organization_id == current_user.organization_id,
+            )
+        )
+        if result.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="指定された店舗へのアクセス権限がありません",
+            )
 
     record_count = 0
     issue_count = 0

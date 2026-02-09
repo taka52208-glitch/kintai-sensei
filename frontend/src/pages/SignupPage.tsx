@@ -74,7 +74,7 @@ export default function SignupPage() {
         createdAt: new Date().toISOString(),
       };
 
-      setAuth(user, response.access_token);
+      setAuth(user, response.access_token, response.refresh_token);
       trackEvent('sign_up', { method: 'email' });
       navigate('/dashboard');
     } catch (err: unknown) {

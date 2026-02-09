@@ -6,11 +6,13 @@ import { config } from '../config';
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
-  setAuth: (user: User, accessToken: string) => void;
+  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  setAccessToken: (accessToken: string) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -20,22 +22,29 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: true,
 
-      setAuth: (user, accessToken) => {
+      setAuth: (user, accessToken, refreshToken) => {
         set({
           user,
           accessToken,
+          refreshToken,
           isAuthenticated: true,
           isLoading: false,
         });
+      },
+
+      setAccessToken: (accessToken) => {
+        set({ accessToken });
       },
 
       clearAuth: () => {
         set({
           user: null,
           accessToken: null,
+          refreshToken: null,
           isAuthenticated: false,
           isLoading: false,
         });
@@ -50,6 +59,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {

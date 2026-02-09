@@ -196,6 +196,14 @@ async def update_issue(
     if issue is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="異常が見つかりません")
 
+    # 組織所有権チェック
+    employee = issue.attendance_record.employee
+    if employee.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
+    if current_user.role == UserRole.STORE_MANAGER and current_user.store_id:
+        if employee.store_id != current_user.store_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
+
     # ステータス更新
     old_status = issue.status
     issue.status = IssueStatus(request.status)
@@ -223,11 +231,25 @@ async def add_issue_log(
     current_user: StoreManagerUser,
 ):
     """対応ログ追加"""
-    result = await db.execute(select(Issue).where(Issue.id == issue_id))
+    result = await db.execute(
+        select(Issue)
+        .options(
+            joinedload(Issue.attendance_record).joinedload(AttendanceRecord.employee),
+        )
+        .where(Issue.id == issue_id)
+    )
     issue = result.scalar_one_or_none()
 
     if issue is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="異常が見つかりません")
+
+    # 組織所有権チェック
+    employee = issue.attendance_record.employee
+    if employee.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
+    if current_user.role == UserRole.STORE_MANAGER and current_user.store_id:
+        if employee.store_id != current_user.store_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
 
     log = IssueLog(
         issue_id=issue.id,
@@ -269,6 +291,14 @@ async def generate_reason(
 
     if issue is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="異常が見つかりません")
+
+    # 組織所有権チェック
+    employee = issue.attendance_record.employee
+    if employee.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
+    if current_user.role == UserRole.STORE_MANAGER and current_user.store_id:
+        if employee.store_id != current_user.store_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="アクセス権限がありません")
 
     # 理由文生成
     generated_text = await generate_reason_text(

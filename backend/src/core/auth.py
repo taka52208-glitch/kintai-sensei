@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.security import decode_token
+from src.core.token_blacklist import is_blacklisted
 from src.models.user import User, UserRole
 
 
@@ -21,6 +22,14 @@ async def get_current_user(
 ) -> User:
     """現在のユーザーを取得"""
     token = credentials.credentials
+
+    if is_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="トークンは無効化されています",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     payload = decode_token(token)
 
     if payload is None:

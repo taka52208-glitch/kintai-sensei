@@ -84,12 +84,30 @@ TEMPLATE_SHAROUSHI = """\
 <p><strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。導入に手間はかかりません。</p>
 
 <p style="text-align: center; margin: 24px 0;">
-  <a href="https://kintai-sensei.vercel.app/signup"
+  <a href="https://kintai-sensei.vercel.app"
      style="background: #1976d2; color: white; padding: 12px 32px;
             text-decoration: none; border-radius: 4px; font-weight: bold;">
     無料で試してみる
   </a>
 </p>
+
+<table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;" colspan="2"><strong>デモアカウント（すぐにお試しいただけます）</strong></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">URL</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><a href="https://kintai-sensei.vercel.app" style="color: #1976d2;">https://kintai-sensei.vercel.app</a></td>
+  </tr>
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;">メール</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>store@example.com</code></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">パスワード</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>KintaiDev2026!</code></td>
+  </tr>
+</table>
 
 <p>ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
 
@@ -121,12 +139,30 @@ TEMPLATE_ASSOCIATION = """\
 <p>飲食業界は労基署の重点調査対象業種であり、中小飲食店にとって法令遵守は大きな課題です。<strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。</p>
 
 <p style="text-align: center; margin: 24px 0;">
-  <a href="https://kintai-sensei.vercel.app/signup"
+  <a href="https://kintai-sensei.vercel.app"
      style="background: #1976d2; color: white; padding: 12px 32px;
             text-decoration: none; border-radius: 4px; font-weight: bold;">
     無料で試してみる
   </a>
 </p>
+
+<table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;" colspan="2"><strong>デモアカウント（すぐにお試しいただけます）</strong></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">URL</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><a href="https://kintai-sensei.vercel.app" style="color: #1976d2;">https://kintai-sensei.vercel.app</a></td>
+  </tr>
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;">メール</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>store@example.com</code></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">パスワード</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>KintaiDev2026!</code></td>
+  </tr>
+</table>
 
 <p>会員様への情報提供の一環としてご紹介いただけましたら幸いです。ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
 
@@ -166,12 +202,30 @@ TEMPLATE_MEDIA = """\
 <p><strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。</p>
 
 <p style="text-align: center; margin: 24px 0;">
-  <a href="https://kintai-sensei.vercel.app/signup"
+  <a href="https://kintai-sensei.vercel.app"
      style="background: #1976d2; color: white; padding: 12px 32px;
             text-decoration: none; border-radius: 4px; font-weight: bold;">
     無料で試してみる
   </a>
 </p>
+
+<table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;" colspan="2"><strong>デモアカウント（すぐにお試しいただけます）</strong></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">URL</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><a href="https://kintai-sensei.vercel.app" style="color: #1976d2;">https://kintai-sensei.vercel.app</a></td>
+  </tr>
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;">メール</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>store@example.com</code></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">パスワード</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><code>KintaiDev2026!</code></td>
+  </tr>
+</table>
 
 <p>ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
 

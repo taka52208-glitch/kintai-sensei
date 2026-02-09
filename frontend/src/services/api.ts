@@ -22,19 +22,70 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// リフレッシュ中フラグ（多重リフレッシュ防止）
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
 // レスポンスインターセプター（エラーハンドリング）
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const requestUrl = error.config?.url || '';
+    const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || '';
 
-    // 401エラー時の処理（ログインAPI以外）
-    if (error.response?.status === 401 && !requestUrl.includes('/auth/login')) {
-      // ログアウト処理
-      useAuthStore.getState().clearAuth();
-      // 現在のパスがlogin以外の場合のみリダイレクト
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+    // 401エラー時の処理（認証API以外）
+    if (
+      error.response?.status === 401 &&
+      !requestUrl.includes('/auth/login') &&
+      !requestUrl.includes('/auth/refresh')
+    ) {
+      const { refreshToken } = useAuthStore.getState();
+
+      if (refreshToken && originalRequest) {
+        // リフレッシュ試行
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const response = await api.post('/api/auth/refresh', {
+              refresh_token: refreshToken,
+            });
+            const newAccessToken = response.data.access_token;
+            useAuthStore.getState().setAccessToken(newAccessToken);
+            isRefreshing = false;
+            onRefreshed(newAccessToken);
+            // 元のリクエストをリトライ
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+          } catch {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            useAuthStore.getState().clearAuth();
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/login';
+            }
+          }
+        } else {
+          // 他のリクエストはリフレッシュ完了を待つ
+          return new Promise((resolve) => {
+            refreshSubscribers.push((token: string) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
+              resolve(api(originalRequest));
+            });
+          });
+        }
+      } else {
+        // リフレッシュトークンなし→ログアウト
+        useAuthStore.getState().clearAuth();
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
       }
     }
 
@@ -77,11 +128,25 @@ export const authApi = {
   },
 
   logout: async () => {
-    await api.post('/api/auth/logout');
+    const { accessToken, refreshToken } = useAuthStore.getState();
+    await api.post('/api/auth/logout', {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
   },
 
-  refresh: async () => {
-    const response = await api.post('/api/auth/refresh');
+  refresh: async (refreshToken: string) => {
+    const response = await api.post('/api/auth/refresh', {
+      refresh_token: refreshToken,
+    });
+    return response.data;
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const response = await api.put('/api/auth/password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
     return response.data;
   },
 };

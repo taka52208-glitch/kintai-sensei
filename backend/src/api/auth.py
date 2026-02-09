@@ -10,9 +10,14 @@ from sqlalchemy.orm import joinedload
 
 from src.core.database import get_db
 from src.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
+from src.core.auth import CurrentUser
+from src.core.token_blacklist import blacklist_token
 from src.models.user import User
 from src.models.store import Organization
-from src.schemas.auth import LoginRequest, LoginResponse, SignupRequest, UserInfo, TokenRefreshResponse
+from src.schemas.auth import (
+    LoginRequest, LoginResponse, SignupRequest, UserInfo,
+    TokenRefreshRequest, TokenRefreshResponse, LogoutRequest, ChangePasswordRequest,
+)
 from src.config import settings
 
 
@@ -143,11 +148,11 @@ async def signup(
 
 @router.post("/refresh", response_model=TokenRefreshResponse)
 async def refresh_token(
-    refresh_token: str,
+    request: TokenRefreshRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """トークンリフレッシュ"""
-    payload = decode_token(refresh_token)
+    payload = decode_token(request.refresh_token)
 
     if payload is None or payload.get("type") != "refresh":
         raise HTTPException(
@@ -173,6 +178,33 @@ async def refresh_token(
 
 
 @router.post("/logout")
-async def logout():
-    """ログアウト（クライアント側でトークン削除）"""
+async def logout(request: LogoutRequest):
+    """ログアウト（トークン無効化）"""
+    if request.access_token:
+        payload = decode_token(request.access_token)
+        if payload and payload.get("exp"):
+            blacklist_token(request.access_token, payload["exp"])
+    if request.refresh_token:
+        payload = decode_token(request.refresh_token)
+        if payload and payload.get("exp"):
+            blacklist_token(request.refresh_token, payload["exp"])
     return {"message": "ログアウトしました"}
+
+
+@router.put("/password")
+async def change_password(
+    request: ChangePasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CurrentUser,
+):
+    """パスワード変更"""
+    if not verify_password(request.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="現在のパスワードが正しくありません",
+        )
+
+    current_user.password_hash = get_password_hash(request.new_password)
+    await db.commit()
+
+    return {"message": "パスワードを変更しました"}
