@@ -282,7 +282,9 @@ async def generate_reason(
         user=current_user,
     )
 
+    await db.commit()
+
     return GenerateReasonResponse(
         generated_text=generated_text,
-        correction_reason_id=str(issue_id),  # 簡略化
+        correction_reason_id=str(issue_id),
     )

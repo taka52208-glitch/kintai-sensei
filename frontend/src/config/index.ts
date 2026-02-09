@@ -14,6 +14,9 @@ export const config = {
   refreshTokenKey: 'kintai_refresh_token',
   tokenExpiry: 60 * 60 * 1000, // 1時間
 
+  // Google Analytics
+  gaId: import.meta.env.VITE_GA_ID || '',
+
   // ページネーション
   defaultPageSize: 20,
 

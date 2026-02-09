@@ -104,9 +104,23 @@ export default function IssueDetailPage() {
   });
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(generatedReason);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(generatedReason);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // フォールバック: 旧ブラウザ/権限不足時
+      const textarea = document.createElement('textarea');
+      textarea.value = generatedReason;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (isLoading) {

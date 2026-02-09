@@ -40,6 +40,7 @@ export default function StoresPage() {
     name: '',
   });
   const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Store | null>(null);
 
   // 店舗一覧取得
   const { data: storesData, isLoading } = useQuery({
@@ -169,11 +170,7 @@ export default function StoresPage() {
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => {
-                              if (confirm('この店舗を削除しますか？関連するデータも削除されます。')) {
-                                deleteMutation.mutate(store.id);
-                              }
-                            }}
+                            onClick={() => setDeleteTarget(store)}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -187,6 +184,33 @@ export default function StoresPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>店舗削除の確認</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {deleteTarget?.name}（{deleteTarget?.code}）を削除しますか？関連するデータも削除されます。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>キャンセル</Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={deleteMutation.isPending}
+            onClick={() => {
+              if (deleteTarget) {
+                deleteMutation.mutate(deleteTarget.id, {
+                  onSettled: () => setDeleteTarget(null),
+                });
+              }
+            }}
+          >
+            削除
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* 作成/編集ダイアログ */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

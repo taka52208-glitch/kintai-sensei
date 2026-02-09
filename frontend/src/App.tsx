@@ -1,14 +1,19 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
+import { trackPageView } from './utils/analytics';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import IssueDetailPage from './pages/IssueDetailPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/admin/UsersPage';
 import StoresPage from './pages/admin/StoresPage';
+import LegalPage from './pages/LegalPage';
 
 // Layout
 import MainLayout from './components/MainLayout';
@@ -41,10 +46,21 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
+
   return (
     <Routes>
       {/* 公開ルート */}
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/terms" element={<LegalPage docKey="terms" />} />
+      <Route path="/privacy" element={<LegalPage docKey="privacy" />} />
+      <Route path="/tokushoho" element={<LegalPage docKey="tokushoho" />} />
 
       {/* 認証必須ルート */}
       <Route

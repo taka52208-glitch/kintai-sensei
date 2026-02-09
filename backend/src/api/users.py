@@ -13,7 +13,7 @@ from src.core.database import get_db
 from src.core.auth import AdminUser
 from src.core.security import get_password_hash
 from src.models.user import User, UserRole
-from src.schemas.user import UserResponse, UserUpdate, UserInvite, UserListResponse
+from src.schemas.user import UserResponse, UserUpdate, UserInvite, InviteResponse, UserListResponse
 
 
 router = APIRouter()
@@ -93,7 +93,7 @@ async def get_user(
     )
 
 
-@router.post("/invite", response_model=UserResponse)
+@router.post("/invite", response_model=InviteResponse)
 async def invite_user(
     request: UserInvite,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -108,7 +108,7 @@ async def invite_user(
             detail="このメールアドレスは既に登録されています",
         )
 
-    # 仮パスワード生成（実際は招待リンクを送る）
+    # 仮パスワード生成
     temp_password = secrets.token_urlsafe(12)
 
     user = User(
@@ -123,9 +123,7 @@ async def invite_user(
     await db.commit()
     await db.refresh(user)
 
-    # TODO: 招待メール送信
-
-    return UserResponse(
+    user_response = UserResponse(
         id=str(user.id),
         email=user.email,
         name=user.name,
@@ -134,6 +132,11 @@ async def invite_user(
         store_name=None,
         is_active=user.is_active,
         created_at=user.created_at,
+    )
+
+    return InviteResponse(
+        user=user_response,
+        temporary_password=temp_password,
     )
 
 

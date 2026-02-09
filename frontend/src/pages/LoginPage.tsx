@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { healthApi } from '../services/api';
 import {
   Box,
   Card,
@@ -9,6 +10,8 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Link,
+  Stack,
 } from '@mui/material';
 import { useAuthStore } from '../stores/authStore';
 import { authApi } from '../services/api';
@@ -22,15 +25,18 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  // バックエンドのウォームアップ（Renderコールドスタート対策）
+  useEffect(() => {
+    healthApi.ping();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      console.log('Attempting login...');
       const response = await authApi.login(email, password);
-      console.log('Login response:', response);
       // バックエンドのsnake_caseをフロントエンドのcamelCaseに変換
       const user = {
         id: response.user.id,
@@ -42,12 +48,9 @@ export default function LoginPage() {
         isActive: true,
         createdAt: new Date().toISOString(),
       };
-      console.log('Setting auth with user:', user);
       setAuth(user, response.access_token);
-      console.log('Navigating to dashboard...');
       navigate('/dashboard');
     } catch (err: unknown) {
-      console.error('Login error:', err);
       const error = err as { response?: { status?: number; data?: unknown }; message?: string };
       if (error.response?.status === 401) {
         setError('メールアドレスまたはパスワードが正しくありません');
@@ -120,6 +123,15 @@ export default function LoginPage() {
               {loading ? <CircularProgress size={24} /> : 'ログイン'}
             </Button>
           </Box>
+
+          <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              アカウントをお持ちでない方は{' '}
+              <Link component={RouterLink} to="/signup">
+                新規登録
+              </Link>
+            </Typography>
+          </Stack>
         </CardContent>
       </Card>
     </Box>

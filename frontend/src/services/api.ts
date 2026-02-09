@@ -43,12 +43,36 @@ api.interceptors.response.use(
 );
 
 // ========================================
+// ヘルスチェック（コールドスタート対策）
+// ========================================
+
+export const healthApi = {
+  ping: async () => {
+    try {
+      await api.get('/api/health', { timeout: 60000 });
+    } catch {
+      // ウォームアップ目的なのでエラーは無視
+    }
+  },
+};
+
+// ========================================
 // 認証API
 // ========================================
 
 export const authApi = {
   login: async (email: string, password: string) => {
     const response = await api.post('/api/auth/login', { email, password });
+    return response.data;
+  },
+
+  signup: async (data: {
+    organization_name: string;
+    name: string;
+    email: string;
+    password: string;
+  }) => {
+    const response = await api.post('/api/auth/signup', data);
     return response.data;
   },
 
@@ -208,6 +232,27 @@ export const reportsApi = {
     const response = await api.post('/api/reports', data, {
       responseType: 'blob',
     });
+    return response.data;
+  },
+};
+
+// ========================================
+// 課金API
+// ========================================
+
+export const billingApi = {
+  getPlan: async () => {
+    const response = await api.get('/api/billing/plan');
+    return response.data;
+  },
+
+  createCheckout: async (data: { price_id: string; quantity: number }) => {
+    const response = await api.post('/api/billing/checkout', data);
+    return response.data;
+  },
+
+  openPortal: async () => {
+    const response = await api.post('/api/billing/portal');
     return response.data;
   },
 };

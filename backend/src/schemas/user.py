@@ -43,6 +43,13 @@ class UserInvite(BaseModel):
     store_id: str | None = None
 
 
+class InviteResponse(BaseModel):
+    """招待レスポンス（仮パスワード付き）"""
+    user: UserResponse
+    temporary_password: str
+    message: str = "招待が完了しました。以下の仮パスワードをユーザーにお伝えください。"
+
+
 class UserListResponse(BaseModel):
     """ユーザー一覧レスポンス"""
     items: list[UserResponse]

@@ -2,11 +2,19 @@
 
 import uuid
 from datetime import datetime
+from enum import Enum
 
-from sqlalchemy import String, DateTime, ForeignKey
+from sqlalchemy import String, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
+
+
+class PlanType(str, Enum):
+    """料金プラン"""
+    FREE = "free"
+    STANDARD = "standard"
+    PRO = "pro"
 
 
 class Organization(Base):
@@ -15,6 +23,13 @@ class Organization(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    # Stripe決済情報
+    plan: Mapped[str] = mapped_column(String(20), default=PlanType.FREE.value, nullable=False)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    employee_limit: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

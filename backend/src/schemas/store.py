@@ -2,18 +2,25 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
-class StoreResponse(BaseModel):
+class CamelCaseModel(BaseModel):
+    """camelCase出力用の基底クラス"""
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+
+class StoreResponse(CamelCaseModel):
     """店舗レスポンス"""
     id: str
     code: str
     name: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class StoreCreate(BaseModel):
@@ -28,7 +35,7 @@ class StoreUpdate(BaseModel):
     name: str | None = None
 
 
-class StoreListResponse(BaseModel):
+class StoreListResponse(CamelCaseModel):
     """店舗一覧レスポンス"""
     items: list[StoreResponse]
     total: int

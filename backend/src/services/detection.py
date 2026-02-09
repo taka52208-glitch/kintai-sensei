@@ -1,6 +1,6 @@
 """異常検知サービス"""
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -37,13 +37,16 @@ async def get_detection_rules(db: AsyncSession, organization_id: UUID) -> dict:
         }
 
 
+_REF_DATE = date(2000, 1, 1)
+
+
 def calc_work_hours(clock_in: time | None, clock_out: time | None) -> float | None:
     """勤務時間を計算（時間単位）"""
     if clock_in is None or clock_out is None:
         return None
 
-    dt_in = datetime.combine(datetime.today(), clock_in)
-    dt_out = datetime.combine(datetime.today(), clock_out)
+    dt_in = datetime.combine(_REF_DATE, clock_in)
+    dt_out = datetime.combine(_REF_DATE, clock_out)
 
     # 日跨ぎ対応
     if dt_out < dt_in:
@@ -53,21 +56,37 @@ def calc_work_hours(clock_in: time | None, clock_out: time | None) -> float | No
     return diff.total_seconds() / 3600
 
 
+def _time_to_minutes(t: time) -> int:
+    """time → 深夜0時起点の分数"""
+    return t.hour * 60 + t.minute
+
+
 def is_night_work(clock_in: time | None, clock_out: time | None, night_start: int, night_end: int) -> bool:
-    """深夜勤務を含むか判定"""
+    """深夜勤務を含むか判定（深夜帯をまたぐシフトにも対応）"""
     if clock_in is None or clock_out is None:
         return False
 
-    # 簡易判定: 深夜時間帯と重なるか
-    night_start_time = time(night_start, 0)
-    night_end_time = time(night_end, 0)
+    in_m = _time_to_minutes(clock_in)
+    out_m = _time_to_minutes(clock_out)
+    ns = night_start * 60   # 例: 22*60=1320
+    ne = night_end * 60     # 例: 5*60=300
 
-    # 出勤が深夜帯
-    if clock_in >= night_start_time or clock_in < night_end_time:
+    # 日跨ぎシフトの場合、退勤を +24h で表現
+    if out_m <= in_m:
+        out_m += 24 * 60
+
+    # 深夜帯も同様（22:00-5:00 → 1320-1740）
+    if ne <= ns:
+        ne += 24 * 60
+
+    # シフト [in_m, out_m] と 深夜帯 [ns, ne] の重なり判定
+    if in_m < ne and out_m > ns:
         return True
-    # 退勤が深夜帯
-    if clock_out >= night_start_time or clock_out < night_end_time:
-        return True
+
+    # 深夜帯が翌日にもかかる場合: [ns-1440, ne-1440] もチェック
+    if ns >= 24 * 60:
+        if in_m < (ne - 24 * 60) and out_m > (ns - 24 * 60):
+            return True
 
     return False
 
@@ -153,8 +172,8 @@ async def detect_issues(
 
     # R007, R008: 不整合
     if clock_in is not None and clock_out is not None:
-        dt_in = datetime.combine(datetime.today(), clock_in)
-        dt_out = datetime.combine(datetime.today(), clock_out)
+        dt_in = datetime.combine(_REF_DATE, clock_in)
+        dt_out = datetime.combine(_REF_DATE, clock_out)
         if dt_out < dt_in and (dt_out.hour > 6):  # 日跨ぎでない場合
             issue = Issue(
                 attendance_record_id=attendance.id,

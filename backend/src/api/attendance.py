@@ -14,9 +14,13 @@ from src.core.auth import StoreManagerUser
 from src.models.employee import Employee
 from src.models.attendance import AttendanceRecord
 from src.services.detection import detect_issues
+from src.services.plan_limits import check_employee_limit
 
 
 router = APIRouter()
+
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_ROW_COUNT = 10000
 
 
 def detect_encoding(content: bytes) -> str:
@@ -70,6 +74,12 @@ async def preview_upload(
     """CSVプレビュー"""
     content = await file.read()
 
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"ファイルサイズが上限（{MAX_FILE_SIZE // 1024 // 1024}MB）を超えています",
+        )
+
     try:
         df = parse_csv(content)
         df = normalize_columns(df)
@@ -77,6 +87,12 @@ async def preview_upload(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"CSVの解析に失敗しました: {str(e)}",
+        )
+
+    if len(df) > MAX_ROW_COUNT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"行数が上限（{MAX_ROW_COUNT}行）を超えています（{len(df)}行）",
         )
 
     # 必須カラムチェック
@@ -105,6 +121,12 @@ async def upload_attendance(
     """CSV取り込み＆異常検知"""
     content = await file.read()
 
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"ファイルサイズが上限（{MAX_FILE_SIZE // 1024 // 1024}MB）を超えています",
+        )
+
     try:
         df = parse_csv(content)
         df = normalize_columns(df)
@@ -112,6 +134,12 @@ async def upload_attendance(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"CSVの解析に失敗しました: {str(e)}",
+        )
+
+    if len(df) > MAX_ROW_COUNT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"行数が上限（{MAX_ROW_COUNT}行）を超えています（{len(df)}行）",
         )
 
     record_count = 0
@@ -132,6 +160,13 @@ async def upload_attendance(
         employee = result.scalar_one_or_none()
 
         if employee is None:
+            # プラン制限チェック
+            allowed, message = await check_employee_limit(db, current_user.organization_id)
+            if not allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=message,
+                )
             employee = Employee(
                 organization_id=current_user.organization_id,
                 store_id=store_id if store_id else current_user.store_id,

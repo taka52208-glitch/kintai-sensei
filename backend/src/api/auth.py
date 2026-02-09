@@ -9,9 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.core.database import get_db
-from src.core.security import verify_password, create_access_token, create_refresh_token, decode_token
+from src.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
 from src.models.user import User
-from src.schemas.auth import LoginRequest, LoginResponse, UserInfo, TokenRefreshResponse
+from src.models.store import Organization
+from src.schemas.auth import LoginRequest, LoginResponse, SignupRequest, UserInfo, TokenRefreshResponse
 from src.config import settings
 
 
@@ -78,6 +79,64 @@ async def login(
             role=user.role,
             store_id=str(user.store_id) if user.store_id else None,
             store_name=user.store.name if user.store else None,
+        ),
+    )
+
+
+@router.post("/signup", response_model=LoginResponse)
+async def signup(
+    request: SignupRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """新規会員登録（組織＋管理者ユーザー同時作成）"""
+    import uuid
+
+    # メール重複チェック
+    result = await db.execute(select(User).where(User.email == request.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="このメールアドレスは既に登録されています",
+        )
+
+    # 組織を作成
+    organization = Organization(
+        id=str(uuid.uuid4()),
+        name=request.organization_name,
+    )
+    db.add(organization)
+
+    # 管理者ユーザーを作成
+    user = User(
+        id=str(uuid.uuid4()),
+        organization_id=organization.id,
+        store_id=None,
+        email=request.email,
+        password_hash=get_password_hash(request.password),
+        name=request.name,
+        role="admin",
+        is_active=True,
+    )
+    db.add(user)
+
+    await db.commit()
+    await db.refresh(user)
+
+    # トークン生成
+    token_data = {"sub": str(user.id)}
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+
+    return LoginResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserInfo(
+            id=str(user.id),
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            store_id=None,
+            store_name=None,
         ),
     )
 

@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     # OpenAI API
     openai_api_key: str = ""
 
+    # Stripe決済
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_standard: str = ""  # Standard プラン (300円/人)
+    stripe_price_pro: str = ""       # Pro プラン (500円/人)
+
+    # フロントエンドURL（Stripe決済のリダイレクト先）
+    frontend_url: str = "https://kintai-sensei.vercel.app"
+
     # セキュリティ
     max_login_attempts: int = 5
     lockout_minutes: int = 15

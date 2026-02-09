@@ -55,6 +55,8 @@ export default function UsersPage() {
     storeId: '',
   });
   const [error, setError] = useState('');
+  const [inviteResult, setInviteResult] = useState<{ email: string; password: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
   // ユーザー一覧取得
   const { data: usersData, isLoading } = useQuery({
@@ -71,9 +73,13 @@ export default function UsersPage() {
   // 招待
   const inviteMutation = useMutation({
     mutationFn: () => usersApi.invite(form),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       handleCloseDialog();
+      setInviteResult({
+        email: data.user.email,
+        password: data.temporary_password,
+      });
     },
     onError: () => {
       setError('招待に失敗しました');
@@ -204,11 +210,7 @@ export default function UsersPage() {
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => {
-                              if (confirm('このユーザーを削除しますか？')) {
-                                deleteMutation.mutate(user.id);
-                              }
-                            }}
+                            onClick={() => setDeleteTarget(user)}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -222,6 +224,75 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 招待完了ダイアログ */}
+      <Dialog open={!!inviteResult} onClose={() => setInviteResult(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>招待が完了しました</DialogTitle>
+        <DialogContent>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            以下の仮パスワードをユーザーにお伝えください。この画面を閉じると再表示できません。
+          </Alert>
+          <TextField
+            fullWidth
+            label="メールアドレス"
+            value={inviteResult?.email || ''}
+            margin="normal"
+            InputProps={{ readOnly: true }}
+          />
+          <TextField
+            fullWidth
+            label="仮パスワード"
+            value={inviteResult?.password || ''}
+            margin="normal"
+            InputProps={{ readOnly: true }}
+            helperText="初回ログイン後、パスワードの変更を推奨してください"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              if (inviteResult) {
+                navigator.clipboard.writeText(
+                  `メールアドレス: ${inviteResult.email}\n仮パスワード: ${inviteResult.password}`
+                );
+              }
+            }}
+          >
+            コピー
+          </Button>
+          <Button variant="contained" onClick={() => setInviteResult(null)}>
+            閉じる
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>ユーザー削除の確認</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {deleteTarget?.name}（{deleteTarget?.email}）を削除しますか？
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>キャンセル</Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={deleteMutation.isPending}
+            onClick={() => {
+              if (deleteTarget) {
+                deleteMutation.mutate(deleteTarget.id, {
+                  onSettled: () => setDeleteTarget(null),
+                });
+              }
+            }}
+          >
+            削除
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* 招待/編集ダイアログ */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

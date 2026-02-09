@@ -29,7 +29,8 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import { issuesApi, attendanceApi } from '../services/api';
+import { issuesApi, attendanceApi, billingApi } from '../services/api';
+import { trackEvent } from '../utils/analytics';
 import type { Issue, IssueType, IssueStatus, IssueSeverity } from '../types';
 import { ISSUE_TYPE_LABELS, STATUS_LABELS, SEVERITY_LABELS } from '../types';
 
@@ -60,6 +61,12 @@ export default function DashboardPage() {
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
 
+  // プラン情報
+  const { data: planData } = useQuery({
+    queryKey: ['billing', 'plan'],
+    queryFn: billingApi.getPlan,
+  });
+
   // 異常一覧取得
   const { data: issuesData, isLoading, refetch } = useQuery({
     queryKey: ['issues', filters],
@@ -77,6 +84,7 @@ export default function DashboardPage() {
       setUploadSuccess(`${data.record_count}件の勤怠データを取り込み、${data.issue_count}件の異常を検知しました`);
       setUploadError('');
       queryClient.invalidateQueries({ queryKey: ['issues'] });
+      trackEvent('csv_upload', { records: data.record_count, issues: data.issue_count });
     },
     onError: () => {
       setUploadError('ファイルの取り込みに失敗しました');
@@ -105,8 +113,34 @@ export default function DashboardPage() {
 
   const issues: Issue[] = issuesData?.items || [];
 
+  const usagePercent = planData
+    ? Math.round((planData.employee_count / planData.employee_limit) * 100)
+    : 0;
+
   return (
     <Box>
+      {/* プラン使用状況バナー */}
+      {planData && usagePercent >= 80 && (
+        <Alert
+          severity={usagePercent >= 100 ? 'error' : 'warning'}
+          sx={{ mb: 3 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => navigate('/settings?billing=upgrade')}
+            >
+              アップグレード
+            </Button>
+          }
+        >
+          従業員数: {planData.employee_count}/{planData.employee_limit}名
+          {usagePercent >= 100
+            ? '（上限に達しています。新規従業員の追加にはプランのアップグレードが必要です）'
+            : '（まもなく上限に達します）'}
+        </Alert>
+      )}
+
       {/* CSVアップロードエリア */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
