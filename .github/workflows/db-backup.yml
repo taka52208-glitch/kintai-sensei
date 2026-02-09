@@ -1,0 +1,44 @@
+name: Daily DB Backup
+
+on:
+  schedule:
+    # 毎日 JST 04:00 (UTC 19:00) に実行
+    - cron: '0 19 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run pg_dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          FILENAME="kintai_sensei_backup_${TIMESTAMP}.sql.gz"
+          pg_dump "${DATABASE_URL}" | gzip > "${FILENAME}"
+          echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
+          echo "Backup created: ${FILENAME} ($(du -h ${FILENAME} | cut -f1))"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 90
+
+      - name: Verify backup
+        run: |
+          SIZE=$(stat -c%s "${{ env.BACKUP_FILE }}")
+          if [ "$SIZE" -lt 100 ]; then
+            echo "::error::Backup file is too small (${SIZE} bytes). Backup may have failed."
+            exit 1
+          fi
+          echo "Backup verified: ${SIZE} bytes"
