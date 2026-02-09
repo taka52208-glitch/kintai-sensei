@@ -4,7 +4,7 @@ import secrets
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -23,8 +23,8 @@ router = APIRouter()
 async def list_users(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: AdminUser,
-    page: int = 1,
-    page_size: int = 20,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
 ):
     """ユーザー一覧取得（管理者のみ）"""
     offset = (page - 1) * page_size

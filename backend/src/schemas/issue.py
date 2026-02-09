@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
@@ -68,8 +68,8 @@ class IssueUpdateRequest(BaseModel):
 
 class IssueLogCreate(BaseModel):
     """対応ログ作成"""
-    action: str
-    memo: str | None = None
+    action: str = Field(max_length=50)
+    memo: str | None = Field(default=None, max_length=2000)
 
 
 class GenerateReasonRequest(BaseModel):
@@ -78,11 +78,11 @@ class GenerateReasonRequest(BaseModel):
         alias_generator=to_camel,
         populate_by_name=True,
     )
-    template_type: str  # internal, employee, audit
-    cause_category: str  # forgot_clock, device_issue, etc.
-    cause_detail: str | None = None
-    action_taken: str  # correction_request, etc.
-    prevention: str  # operation_notice, etc.
+    template_type: str = Field(max_length=20)  # internal, employee, audit
+    cause_category: str = Field(max_length=30)  # forgot_clock, device_issue, etc.
+    cause_detail: str | None = Field(default=None, max_length=1000)
+    action_taken: str = Field(max_length=30)  # correction_request, etc.
+    prevention: str = Field(max_length=30)  # operation_notice, etc.
 
 
 class GenerateReasonResponse(CamelCaseModel):

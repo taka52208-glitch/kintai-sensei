@@ -1,10 +1,10 @@
 """異常・是正モデル"""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy import Index, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -70,6 +70,11 @@ class PreventionType(str, Enum):
 class Issue(Base):
     """異常テーブル"""
     __tablename__ = "issues"
+    __table_args__ = (
+        Index("ix_issues_attendance", "attendance_record_id"),
+        Index("ix_issues_status", "status"),
+        Index("ix_issues_severity", "severity"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     attendance_record_id: Mapped[str] = mapped_column(String(36), ForeignKey("attendance_records.id"), nullable=False)
@@ -77,7 +82,7 @@ class Issue(Base):
     severity: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default=IssueStatus.PENDING.value)
     rule_description: Mapped[str] = mapped_column(Text, nullable=False)
-    detected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    detected_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # リレーション
     attendance_record = relationship("AttendanceRecord", back_populates="issues")
@@ -94,7 +99,7 @@ class IssueLog(Base):
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
     action: Mapped[str] = mapped_column(String(50), nullable=False)
     memo: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # リレーション
     issue = relationship("Issue", back_populates="logs")
@@ -114,7 +119,7 @@ class CorrectionReason(Base):
     prevention: Mapped[str] = mapped_column(String(30), nullable=False)
     generated_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_by: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # リレーション
     issue = relationship("Issue", back_populates="correction_reasons")

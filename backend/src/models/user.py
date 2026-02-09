@@ -1,10 +1,10 @@
 """ユーザーモデル"""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer
+from sqlalchemy import Index, String, Boolean, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import Base
@@ -20,6 +20,9 @@ class UserRole(str, Enum):
 class User(Base):
     """ユーザーテーブル"""
     __tablename__ = "users"
+    __table_args__ = (
+        Index("ix_users_org", "organization_id"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     organization_id: Mapped[str] = mapped_column(String(36), ForeignKey("organizations.id"), nullable=False)
@@ -31,8 +34,8 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # リレーション
     organization = relationship("Organization", back_populates="users")

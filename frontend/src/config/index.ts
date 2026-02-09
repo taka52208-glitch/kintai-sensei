@@ -6,7 +6,7 @@ export const config = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:8634'),
 
   // アプリ設定
-  appName: '勤怠チェック',
+  appName: '勤怠先生',
   appVersion: '1.0.0',
 
   // 認証

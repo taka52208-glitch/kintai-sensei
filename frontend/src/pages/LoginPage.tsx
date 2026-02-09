@@ -57,7 +57,7 @@ export default function LoginPage() {
       } else if (error.response?.status === 429) {
         setError('ログイン試行回数が上限に達しました。しばらく待ってからお試しください');
       } else {
-        setError(`ログインエラー: ${error.message || JSON.stringify(error.response?.data) || '不明なエラー'}`);
+        setError('ログインに失敗しました。しばらく経ってからお試しください');
       }
     } finally {
       setLoading(false);
