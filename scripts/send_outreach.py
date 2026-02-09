@@ -1,14 +1,17 @@
 """
 営業メール一括送信スクリプト
-monitor-recruitment.md のテンプレートAを使用
+送信先のtypeに応じて文面を自動切替
 
 使い方:
     python scripts/send_outreach.py recipients.csv          # ドライラン（確認のみ）
     python scripts/send_outreach.py recipients.csv --send   # 実際に送信
 
 CSVフォーマット:
-    name,email,company
-    山田太郎,yamada@example.com,渋谷食堂
+    name,email,company,type
+    川崎潤一,kawasaki@leaf-sr.jp,リーフレイバー,sharoushi
+    ご担当者,info@shokudanren.jp,食団連,association
+
+type: sharoushi（社労士）/ association（業界団体）/ media（メディア）/ monitor（モニター募集）
 """
 import csv
 import resend
@@ -21,7 +24,8 @@ from pathlib import Path
 RESEND_API_KEY = "re_4KHgS6FR_F9yQuTmXU5T5n8WunAs9gHiB"
 FROM_ADDRESS = "onboarding@resend.dev"  # Resend無料テストドメイン（独自ドメイン不要）
 FROM_NAME = "勤怠先生"
-SENDER_NAME = "（あなたの名前）"  # ← 送信前に変更
+SENDER_NAME = "勤怠先生 開発チーム"
+REPLY_TO = "taka52208@gmail.com"
 
 # Resend無料枠の制限
 DAILY_LIMIT = 100
@@ -29,83 +33,189 @@ DELAY_SECONDS = 2  # 送信間隔（秒）
 
 resend.api_key = RESEND_API_KEY
 
-SUBJECT = "【ご協力のお願い】飲食店向け勤怠チェックツール「勤怠先生」無料モニター募集"
+# --- 件名 ---
+SUBJECTS = {
+    "sharoushi": "【ご連携のご相談】飲食店向け勤怠チェックツール「勤怠先生」のご紹介",
+    "association": "【ご紹介】飲食業界向け勤怠チェックシステム「勤怠先生」について",
+    "media": "【掲載・連携のご相談】飲食業界特化の勤怠チェックシステム「勤怠先生」",
+    "monitor": "【ご協力のお願い】飲食店向け勤怠チェックツール「勤怠先生」無料モニター募集",
+}
 
-EMAIL_TEMPLATE = """\
+# --- 共通フッター ---
+FOOTER = """\
+<hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
+<p style="color: #999; font-size: 11px;">
+  勤怠先生 - 飲食業界特化の勤怠チェックシステム<br>
+  https://kintai-sensei.vercel.app<br>
+  ※返信は {reply_to} まで直接お送りください。<br>
+  ※このメールに心当たりがない場合は、お手数ですがそのまま破棄してください。
+</p>
+</div>
+"""
+
+# --- 社労士向けテンプレート ---
+TEMPLATE_SHAROUSHI = """\
 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
 
 <p>{recipient_name}様</p>
 
-<p>お世話になっております。{sender_name}です。</p>
+<p>突然のご連絡失礼いたします。飲食業界特化の勤怠チェックシステム「<strong>勤怠先生</strong>」を開発・運営しております、{sender_name}と申します。</p>
 
-<p>突然のご連絡失礼いたします。<br>
-現在、飲食店向けの勤怠チェックシステム「<strong>勤怠先生</strong>」を開発・運営しており、<br>
-正式リリースに先立ち、<strong>無料モニター</strong>にご協力いただける飲食店様を探しております。</p>
+<p>貴事務所が飲食業の労務管理に精通されていることを拝見し、<strong>顧問先様へのご紹介</strong>という形での連携をご相談したく、ご連絡いたしました。</p>
 
-<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">
-  勤怠先生とは
-</h3>
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">勤怠先生でできること</h3>
 
-<p>既存の勤怠管理システム（ジョブカン、Airシフト等）から出力したCSVを取り込むだけで、<br>
-以下を<strong>自動で</strong>行うクラウドサービスです。</p>
+<p>既存の勤怠システム（ジョブカン、Airシフト等）のCSVを取り込むだけで、以下を自動で行います。</p>
 
 <ul>
   <li>長時間労働・休憩不足・打刻漏れなど <strong>8種類の異常を自動検知</strong></li>
   <li>労基署対応に使える <strong>是正理由文をAIが自動生成</strong></li>
-  <li>検知結果を <strong>PDF/CSVレポートとして出力</strong>（監査対応用）</li>
+  <li><strong>PDF/CSVレポート出力</strong>（監査対応用）</li>
 </ul>
 
-<p>「検知して終わり」ではなく「<strong>対応まで完結</strong>」する点が最大の特徴です。</p>
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">連携メリット</h3>
 
-<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">
-  無料モニター特典
-</h3>
+<ul>
+  <li>顧問先の労務リスクを事前に可視化し、是正勧告を未然に防止</li>
+  <li>是正理由文の下書きをAI生成 → 先生方の業務効率化</li>
+  <li>顧問先への付加価値提案として差別化に</li>
+</ul>
+
+<p><strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。導入に手間はかかりません。</p>
+
+<p style="text-align: center; margin: 24px 0;">
+  <a href="https://kintai-sensei.vercel.app/signup"
+     style="background: #1976d2; color: white; padding: 12px 32px;
+            text-decoration: none; border-radius: 4px; font-weight: bold;">
+    無料で試してみる
+  </a>
+</p>
+
+<p>ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
+
+<p>よろしくお願いいたします。</p>
+
+<p>{sender_name}</p>
+"""
+
+# --- 業界団体向けテンプレート ---
+TEMPLATE_ASSOCIATION = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+
+<p>{recipient_name}様</p>
+
+<p>突然のご連絡失礼いたします。飲食業界特化の勤怠チェックシステム「<strong>勤怠先生</strong>」を開発・運営しております、{sender_name}と申します。</p>
+
+<p>貴団体が飲食業界の発展に取り組まれていることを拝見し、<strong>会員様への情報提供</strong>という形でお力添えできないかと思い、ご連絡いたしました。</p>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">勤怠先生でできること</h3>
+
+<p>既存の勤怠システム（ジョブカン、Airシフト等）のCSVを取り込むだけで、以下を自動で行います。</p>
+
+<ul>
+  <li>長時間労働・休憩不足・打刻漏れなど <strong>8種類の異常を自動検知</strong></li>
+  <li>労基署対応に使える <strong>是正理由文をAIが自動生成</strong></li>
+  <li><strong>PDF/CSVレポート出力</strong>（監査対応用）</li>
+</ul>
+
+<p>飲食業界は労基署の重点調査対象業種であり、中小飲食店にとって法令遵守は大きな課題です。<strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。</p>
+
+<p style="text-align: center; margin: 24px 0;">
+  <a href="https://kintai-sensei.vercel.app/signup"
+     style="background: #1976d2; color: white; padding: 12px 32px;
+            text-decoration: none; border-radius: 4px; font-weight: bold;">
+    無料で試してみる
+  </a>
+</p>
+
+<p>会員様への情報提供の一環としてご紹介いただけましたら幸いです。ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
+
+<p>よろしくお願いいたします。</p>
+
+<p>{sender_name}</p>
+"""
+
+# --- メディア向けテンプレート ---
+TEMPLATE_MEDIA = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+
+<p>{recipient_name}様</p>
+
+<p>突然のご連絡失礼いたします。飲食業界特化の勤怠チェックシステム「<strong>勤怠先生</strong>」を開発・運営しております、{sender_name}と申します。</p>
+
+<p>貴メディアが飲食店経営者向けの情報発信をされていることを拝見し、<strong>記事掲載・サービス紹介</strong>のご相談をしたく、ご連絡いたしました。</p>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">勤怠先生でできること</h3>
+
+<p>既存の勤怠システム（ジョブカン、Airシフト等）のCSVを取り込むだけで、以下を自動で行います。</p>
+
+<ul>
+  <li>長時間労働・休憩不足・打刻漏れなど <strong>8種類の異常を自動検知</strong></li>
+  <li>労基署対応に使える <strong>是正理由文をAIが自動生成</strong>（市場唯一の機能）</li>
+  <li><strong>PDF/CSVレポート出力</strong>（監査対応用）</li>
+</ul>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">ご提案</h3>
+
+<ul>
+  <li>サービス紹介記事の掲載（取材対応可）</li>
+  <li>飲食店の勤怠管理に関する寄稿・監修</li>
+  <li>読者向けの無料利用枠のご提供</li>
+</ul>
+
+<p><strong>10名以下の店舗は永久無料</strong>で、サイトからすぐにお試しいただけます。</p>
+
+<p style="text-align: center; margin: 24px 0;">
+  <a href="https://kintai-sensei.vercel.app/signup"
+     style="background: #1976d2; color: white; padding: 12px 32px;
+            text-decoration: none; border-radius: 4px; font-weight: bold;">
+    無料で試してみる
+  </a>
+</p>
+
+<p>ご不明な点があれば <strong>{reply_to}</strong> までお気軽にどうぞ。</p>
+
+<p>よろしくお願いいたします。</p>
+
+<p>{sender_name}</p>
+"""
+
+# --- モニター募集テンプレート（飲食店オーナー向け） ---
+TEMPLATE_MONITOR = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+
+<p>{recipient_name}様</p>
+
+<p>突然のご連絡失礼いたします。飲食店向けの勤怠チェックシステム「<strong>勤怠先生</strong>」を開発・運営しております、{sender_name}と申します。</p>
+
+<p>正式リリースに先立ち、<strong>3ヶ月間無料のモニター</strong>にご協力いただける飲食店様を探しております。</p>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">勤怠先生でできること</h3>
+
+<p>既存の勤怠システム（ジョブカン、Airシフト等）のCSVを取り込むだけで、以下を自動で行います。</p>
+
+<ul>
+  <li>長時間労働・休憩不足・打刻漏れなど <strong>8種類の異常を自動検知</strong></li>
+  <li>労基署対応に使える <strong>是正理由文をAIが自動生成</strong></li>
+  <li><strong>PDF/CSVレポート出力</strong>（監査対応用）</li>
+</ul>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">無料モニター特典</h3>
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr style="background: #f5f5f5;">
     <td style="border: 1px solid #ddd; padding: 8px;"><strong>利用料</strong></td>
-    <td style="border: 1px solid #ddd; padding: 8px;"><strong>3ヶ月間 完全無料</strong>（スタンダードプラン相当）</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>3ヶ月間 完全無料</strong></td>
   </tr>
   <tr>
-    <td style="border: 1px solid #ddd; padding: 8px;"><strong>従業員数制限</strong></td>
-    <td style="border: 1px solid #ddd; padding: 8px;">なし（モニター期間中）</td>
-  </tr>
-  <tr style="background: #f5f5f5;">
     <td style="border: 1px solid #ddd; padding: 8px;"><strong>全機能利用</strong></td>
-    <td style="border: 1px solid #ddd; padding: 8px;">異常検知・是正理由文生成・レポート出力すべて利用可</td>
-  </tr>
-  <tr>
-    <td style="border: 1px solid #ddd; padding: 8px;"><strong>優先サポート</strong></td>
-    <td style="border: 1px solid #ddd; padding: 8px;">導入・操作方法を直接サポートいたします</td>
+    <td style="border: 1px solid #ddd; padding: 8px;">異常検知・是正理由文生成・レポート出力</td>
   </tr>
   <tr style="background: #f5f5f5;">
-    <td style="border: 1px solid #ddd; padding: 8px;"><strong>モニター終了後</strong></td>
-    <td style="border: 1px solid #ddd; padding: 8px;">フリープラン（10名以下無料）への自動移行</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>終了後</strong></td>
+    <td style="border: 1px solid #ddd; padding: 8px;">フリープラン（10名以下無料）へ自動移行</td>
   </tr>
 </table>
-
-<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">
-  お願いしたいこと
-</h3>
-
-<ul>
-  <li>月1〜2回の勤怠データ（CSV）のアップロード</li>
-  <li>簡単なアンケートへのご回答（5〜10分程度、計2回）</li>
-  <li>気づいた点・ご要望のフィードバック</li>
-</ul>
-
-<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">
-  モニター期間
-</h3>
-
-<p>2026年2月〜4月（3ヶ月間）</p>
-
-<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">
-  お申し込み方法
-</h3>
-
-<p>ご興味をお持ちいただけましたら、本メールにご返信いただくか、<br>
-以下のURLからサインアップをお願いいたします。</p>
 
 <p style="text-align: center; margin: 24px 0;">
   <a href="https://kintai-sensei.vercel.app/signup"
@@ -115,33 +225,23 @@ EMAIL_TEMPLATE = """\
   </a>
 </p>
 
-<p>もし{recipient_name}様のお知り合いで、飲食店を経営されている方がいらっしゃいましたら、<br>
-ご紹介いただけますと大変ありがたく存じます。</p>
+<p>ご興味をお持ちいただけましたら <strong>{reply_to}</strong> までご連絡ください。</p>
 
-<p>ご不明な点がございましたら、お気軽にお問い合わせください。<br>
-何卒よろしくお願いいたします。</p>
+<p>よろしくお願いいたします。</p>
 
 <p>{sender_name}</p>
-
-<hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
-
-<p style="color: #999; font-size: 11px;">
-  勤怠先生 - 飲食業界特化の勤怠チェックシステム<br>
-  https://kintai-sensei.vercel.app<br>
-  ※このメールに心当たりがない場合は、お手数ですがそのまま破棄してください。
-</p>
-
-</div>
 """
+
+TEMPLATES = {
+    "sharoushi": TEMPLATE_SHAROUSHI,
+    "association": TEMPLATE_ASSOCIATION,
+    "media": TEMPLATE_MEDIA,
+    "monitor": TEMPLATE_MONITOR,
+}
 
 
 def load_recipients(csv_path: str) -> list[dict]:
-    """CSVから送信先リストを読み込み
-
-    CSVフォーマット:
-      name,email,company
-      山田太郎,yamada@example.com,渋谷食堂
-    """
+    """CSVから送信先リストを読み込み"""
     recipients = []
     path = Path(csv_path)
     if not path.exists():
@@ -152,52 +252,57 @@ def load_recipients(csv_path: str) -> list[dict]:
         reader = csv.DictReader(f)
         for row in reader:
             if row.get("email"):
+                rtype = row.get("type", "monitor").strip()
+                if rtype not in TEMPLATES:
+                    print(f"警告: 不明なtype '{rtype}' → monitorとして処理")
+                    rtype = "monitor"
                 recipients.append({
                     "name": row.get("name", "ご担当者"),
                     "email": row["email"].strip(),
                     "company": row.get("company", ""),
+                    "type": rtype,
                 })
     return recipients
 
 
 def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
-    """営業メールを一括送信
-
-    Args:
-        recipients: 送信先リスト
-        dry_run: Trueの場合、実際には送信しない（確認用）
-    """
+    """営業メールを一括送信"""
     total = len(recipients)
     if total > DAILY_LIMIT:
         print(f"警告: 送信先が{total}件あります（日次上限: {DAILY_LIMIT}件）")
-        print(f"最初の{DAILY_LIMIT}件のみ送信します。残りは翌日に送信してください。")
+        print(f"最初の{DAILY_LIMIT}件のみ送信します。")
         recipients = recipients[:DAILY_LIMIT]
         total = DAILY_LIMIT
 
-    print(f"\n{'='*50}")
+    print(f"\n{'='*60}")
     print(f"営業メール {'ドライラン' if dry_run else '送信'}")
     print(f"送信件数: {total}")
     print(f"送信元: {FROM_NAME} <{FROM_ADDRESS}>")
-    print(f"{'='*50}\n")
+    print(f"返信先: {REPLY_TO}")
+    print(f"{'='*60}\n")
 
     log_file = Path(f"scripts/send_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
     with open(log_file, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["timestamp", "name", "email", "company", "status", "email_id"])
+        writer.writerow(["timestamp", "name", "email", "company", "type", "status", "email_id"])
 
         for i, r in enumerate(recipients, 1):
-            html = EMAIL_TEMPLATE.format(
+            template = TEMPLATES[r["type"]]
+            subject = SUBJECTS[r["type"]]
+            html = template.format(
                 recipient_name=r["name"],
                 sender_name=SENDER_NAME,
-            )
+                reply_to=REPLY_TO,
+            ) + FOOTER.format(reply_to=REPLY_TO)
 
-            print(f"[{i}/{total}] {r['name']} <{r['email']}> ({r['company']})...", end=" ")
+            type_label = {"sharoushi": "社労士", "association": "団体", "media": "メディア", "monitor": "モニター"}
+            print(f"[{i}/{total}] [{type_label.get(r['type'], r['type'])}] {r['name']} <{r['email']}>", end=" ")
 
             if dry_run:
-                print("(ドライラン - 送信スキップ)")
+                print("(ドライラン)")
                 writer.writerow([
                     datetime.now().isoformat(), r["name"], r["email"],
-                    r["company"], "dry_run", "",
+                    r["company"], r["type"], "dry_run", "",
                 ])
                 continue
 
@@ -205,7 +310,8 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
                 params: resend.Emails.SendParams = {
                     "from": f"{FROM_NAME} <{FROM_ADDRESS}>",
                     "to": [r["email"]],
-                    "subject": SUBJECT,
+                    "reply_to": REPLY_TO,
+                    "subject": subject,
                     "html": html,
                 }
                 result = resend.Emails.send(params)
@@ -213,13 +319,13 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
                 print(f"送信成功 (ID: {email_id})")
                 writer.writerow([
                     datetime.now().isoformat(), r["name"], r["email"],
-                    r["company"], "sent", email_id,
+                    r["company"], r["type"], "sent", email_id,
                 ])
             except Exception as e:
                 print(f"送信失敗: {e}")
                 writer.writerow([
                     datetime.now().isoformat(), r["name"], r["email"],
-                    r["company"], "failed", str(e),
+                    r["company"], r["type"], "failed", str(e),
                 ])
 
             if i < total:
@@ -231,12 +337,14 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
 def main():
     if len(sys.argv) < 2:
         print("使い方:")
-        print("  python scripts/send_outreach.py recipients.csv          # ドライラン（確認のみ）")
+        print("  python scripts/send_outreach.py recipients.csv          # ドライラン")
         print("  python scripts/send_outreach.py recipients.csv --send   # 実際に送信")
         print("")
         print("CSVフォーマット:")
-        print("  name,email,company")
-        print("  山田太郎,yamada@example.com,渋谷食堂")
+        print("  name,email,company,type")
+        print("  川崎潤一,kawasaki@leaf-sr.jp,リーフレイバー,sharoushi")
+        print("")
+        print("type: sharoushi / association / media / monitor")
         sys.exit(0)
 
     csv_path = sys.argv[1]
@@ -244,7 +352,7 @@ def main():
 
     recipients = load_recipients(csv_path)
     if not recipients:
-        print("エラー: 送信先が0件です。CSVファイルを確認してください。")
+        print("エラー: 送信先が0件です。")
         sys.exit(1)
 
     print(f"送信先: {len(recipients)}件読み込み")
