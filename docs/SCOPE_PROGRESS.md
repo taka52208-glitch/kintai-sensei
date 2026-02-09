@@ -1,4 +1,4 @@
-# 勤怠チェック＋是正理由作成システム 進捗管理表
+# 勤怠先生 進捗管理表
 
 ## フェーズ進捗
 
@@ -10,7 +10,9 @@
 - [x] Phase 6: 本番デプロイ
 - [x] Phase 7: 販売準備（法務・LP・決済・KPI）
 - [x] Phase 8: 販売開始（ローンチ）
-- [ ] Phase 9: 初期顧客獲得（目標10社）→ トラッカー: docs/PHASE1_TRACKER.md
+- [x] Phase 9: 品質監査＋セキュリティ強化（19件修正）
+- [x] Phase 10: 本番DB移行（Neon PostgreSQL＋日次バックアップ）
+- [ ] Phase 11: 初期顧客獲得（目標10社）→ トラッカー: docs/PHASE1_TRACKER.md
 
 ---
 
@@ -20,6 +22,8 @@
 |---------|-----|-----------|
 | フロントエンド | https://kintai-sensei.vercel.app | 稼働中 |
 | バックエンドAPI | https://kintai-sensei-api.onrender.com | 稼働中 |
+| データベース | Neon PostgreSQL (us-east-1) | 稼働中 |
+| DBバックアップ | GitHub Actions (毎日JST 4:00) | 稼働中 |
 | GitHubリポジトリ | https://github.com/taka52208-glitch/kintai-sensei | 公開中 |
 
 ### テストアカウント
@@ -54,7 +58,8 @@
 | /api/auth/login | POST | ログイン | [x] |
 | /api/auth/signup | POST | セルフサインアップ | [x] |
 | /api/auth/refresh | POST | トークンリフレッシュ | [x] |
-| /api/auth/logout | POST | ログアウト | [x] |
+| /api/auth/logout | POST | ログアウト（トークン無効化） | [x] |
+| /api/auth/password | PUT | パスワード変更 | [x] |
 | /api/users | GET | ユーザー一覧 | [x] |
 | /api/users/{id} | GET/PUT/DELETE | ユーザー詳細 | [x] |
 | /api/users/invite | POST | ユーザー招待 | [x] |
@@ -104,6 +109,51 @@
 
 ---
 
+## 品質監査＆セキュリティ強化（2026-02-10実施）
+
+### Phase A: CRITICAL修正（7件）
+| # | 修正内容 | 状態 |
+|---|---------|------|
+| C1 | JWT秘密鍵デフォルト値拒否 | 完了 |
+| C2 | クロステナントアクセス防止（issues API） | 完了 |
+| C3 | CSV store_id所有権検証 | 完了 |
+| C4 | リフレッシュトークン実装 | 完了 |
+| C5 | 法的文書プレースホルダー置換 | 完了 |
+| C6 | パスワード変更機能 | 完了 |
+| C7 | トークンブラックリスト（ログアウト無効化） | 完了 |
+
+### Phase B: HIGH修正（5件）
+| # | 修正内容 | 状態 |
+|---|---------|------|
+| H1 | CSV重複アップロード防止 | 完了 |
+| H2 | ページネーションUI | 完了 |
+| H3 | CSV取込先店舗選択UI | 完了 |
+| H4 | Error Boundary（白画面防止） | 完了 |
+| H7 | グローバル例外ハンドラ（トレースバック漏洩防止） | 完了 |
+
+### Phase C: MEDIUM修正（7件）
+| # | 修正内容 | 状態 |
+|---|---------|------|
+| M1 | DBインデックス追加 | 完了 |
+| M3 | datetime.utcnow()→timezone-aware化 | 完了 |
+| M4 | ユーザー一覧page_size上限追加 | 完了 |
+| M7 | フリーテキスト長さ制限追加 | 完了 |
+| M9 | アプリ名統一（勤怠先生） | 完了 |
+| M11 | ログインエラー詳細漏洩修正 | 完了 |
+| M12 | CSP/Referrer-Policy/Permissions-Policyヘッダー | 完了 |
+
+### 本番DB移行
+| タスク | 状態 |
+|--------|------|
+| Neon PostgreSQLプロジェクト作成 | 完了 |
+| マイグレーション実行 | 完了 |
+| 初期データ投入 | 完了 |
+| Render環境変数設定（DATABASE_URL） | 完了 |
+| GitHub Actions日次バックアップ | 完了（90日保持） |
+| DateTime(timezone=True)互換修正 | 完了 |
+
+---
+
 ## コンテンツ成果物
 
 | ファイル | 内容 | 状態 |
@@ -130,6 +180,10 @@
 | 販売基盤準備（法務+決済+LP） | 完了 |
 | コンテンツマーケ開始（note記事・競合分析） | 完了 |
 | 販売開始（営業資料・ローンチ投稿準備） | 完了 |
+| 品質監査＋セキュリティ強化（19件） | 完了 |
+| 本番DB移行（SQLite→Neon PostgreSQL） | 完了 |
+| 日次DBバックアップ（GitHub Actions） | 完了 |
+| Vercel/Render本番デプロイ最新化 | 完了 |
 | Phase 1 初期顧客獲得（10社目標） | 進行中 |
 
 ---
@@ -140,7 +194,8 @@
 |---------|--------|------|
 | Vercel | Free | $0 |
 | Render | Free | $0 |
-| SQLite | 内蔵 | $0 |
+| Neon PostgreSQL | Free (0.5GB) | $0 |
+| GitHub Actions | Free (2,000分/月) | $0 |
 | **合計** | | **$0** |
 
 ---
@@ -154,6 +209,9 @@
 | STRIPE_PRICE_STANDARD | Render | Standard プランPrice ID |
 | STRIPE_PRICE_PRO | Render | Pro プランPrice ID |
 | VITE_GA_ID | Vercel | Google Analytics 4 計測ID |
+| DATABASE_URL | Render | Neon PostgreSQL接続文字列 |
+| JWT_SECRET_KEY | Render | JWT署名用秘密鍵 |
+| DATABASE_URL | GitHub Secret | DBバックアップ用 |
 
 ---
 
@@ -185,4 +243,4 @@ PYTHONPATH=. uvicorn main:app --reload --port 8634
 
 ---
 
-*最終更新: 2026-02-09*
+*最終更新: 2026-02-10*
