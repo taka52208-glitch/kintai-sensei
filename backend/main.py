@@ -1,14 +1,18 @@
 """FastAPI アプリケーションエントリーポイント"""
 
+import logging
 import signal
 import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from src.config import settings
 from src.api import api_router
+
+logger = logging.getLogger(__name__)
 
 
 # グレースフルシャットダウン
@@ -56,6 +60,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# グローバル例外ハンドラ（トレースバック漏洩防止）
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception: %s %s - %s", request.method, request.url.path, exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "サーバー内部エラーが発生しました。しばらく経ってからお試しください。"},
+    )
+
 
 # APIルーター登録
 app.include_router(api_router, prefix="/api")

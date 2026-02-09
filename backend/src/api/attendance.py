@@ -158,6 +158,7 @@ async def upload_attendance(
             )
 
     record_count = 0
+    skip_count = 0
     issue_count = 0
 
     for _, row in df.iterrows():
@@ -191,10 +192,22 @@ async def upload_attendance(
             db.add(employee)
             await db.flush()
 
+        # 重複チェック（同一従業員+同一日付）
+        record_date = pd.to_datetime(row.get("date")).date()
+        existing = await db.execute(
+            select(AttendanceRecord).where(
+                AttendanceRecord.employee_id == employee.id,
+                AttendanceRecord.date == record_date,
+            )
+        )
+        if existing.scalar_one_or_none() is not None:
+            skip_count += 1
+            continue
+
         # 勤怠レコード作成
         attendance = AttendanceRecord(
             employee_id=employee.id,
-            date=pd.to_datetime(row.get("date")).date(),
+            date=record_date,
             clock_in=pd.to_datetime(row.get("clock_in")).time() if pd.notna(row.get("clock_in")) else None,
             clock_out=pd.to_datetime(row.get("clock_out")).time() if pd.notna(row.get("clock_out")) else None,
             break_minutes=int(row.get("break_minutes")) if pd.notna(row.get("break_minutes")) else None,
@@ -210,8 +223,14 @@ async def upload_attendance(
 
     await db.commit()
 
+    message = f"取り込みが完了しました（{record_count}件追加"
+    if skip_count > 0:
+        message += f"、{skip_count}件は既存データのためスキップ"
+    message += "）"
+
     return {
-        "message": "取り込みが完了しました",
+        "message": message,
         "record_count": record_count,
+        "skip_count": skip_count,
         "issue_count": issue_count,
     }

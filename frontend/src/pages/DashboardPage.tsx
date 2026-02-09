@@ -13,6 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Chip,
   IconButton,
@@ -29,7 +30,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import { issuesApi, attendanceApi, billingApi } from '../services/api';
+import { issuesApi, attendanceApi, billingApi, storesApi } from '../services/api';
 import { trackEvent } from '../utils/analytics';
 import type { Issue, IssueType, IssueStatus, IssueSeverity } from '../types';
 import { ISSUE_TYPE_LABELS, STATUS_LABELS, SEVERITY_LABELS } from '../types';
@@ -57,9 +58,14 @@ export default function DashboardPage() {
     type: '',
   });
 
+  // ページネーション状態
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+
   // ファイルアップロード状態
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
+  const [selectedStoreId, setSelectedStoreId] = useState('');
 
   // プラン情報
   const { data: planData } = useQuery({
@@ -67,10 +73,18 @@ export default function DashboardPage() {
     queryFn: billingApi.getPlan,
   });
 
-  // 異常一覧取得
+  // 店舗一覧取得（CSV upload用）
+  const { data: storesData } = useQuery({
+    queryKey: ['stores'],
+    queryFn: () => storesApi.list(),
+  });
+
+  // 異常一覧取得（ページネーション対応）
   const { data: issuesData, isLoading, refetch } = useQuery({
-    queryKey: ['issues', filters],
+    queryKey: ['issues', filters, page, rowsPerPage],
     queryFn: () => issuesApi.list({
+      page: page + 1,
+      pageSize: rowsPerPage,
       status: filters.status || undefined,
       severity: filters.severity || undefined,
       type: filters.type || undefined,
@@ -79,9 +93,13 @@ export default function DashboardPage() {
 
   // CSVアップロード
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => attendanceApi.upload(file, ''),
+    mutationFn: (file: File) => attendanceApi.upload(file, selectedStoreId),
     onSuccess: (data) => {
-      setUploadSuccess(`${data.record_count}件の勤怠データを取り込み、${data.issue_count}件の異常を検知しました`);
+      let msg = `${data.record_count}件の勤怠データを取り込み、${data.issue_count}件の異常を検知しました`;
+      if (data.skip_count > 0) {
+        msg += `（${data.skip_count}件は既存データのためスキップ）`;
+      }
+      setUploadSuccess(msg);
       setUploadError('');
       queryClient.invalidateQueries({ queryKey: ['issues'] });
       trackEvent('csv_upload', { records: data.record_count, issues: data.issue_count });
@@ -147,6 +165,26 @@ export default function DashboardPage() {
           <Typography variant="h6" gutterBottom>
             勤怠データ取り込み
           </Typography>
+          {/* 店舗選択 */}
+          {storesData?.items && storesData.items.length > 0 && (
+            <TextField
+              select
+              fullWidth
+              label="取り込み先店舗"
+              value={selectedStoreId}
+              onChange={(e) => setSelectedStoreId(e.target.value)}
+              size="small"
+              sx={{ mb: 2 }}
+              helperText="未選択の場合、デフォルト店舗に割り当てられます"
+            >
+              <MenuItem value="">指定なし（デフォルト）</MenuItem>
+              {storesData.items.map((store: { id: string; name: string; code: string }) => (
+                <MenuItem key={store.id} value={store.id}>
+                  {store.name}（{store.code}）
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <Box
             {...getRootProps()}
             sx={{
@@ -334,6 +372,22 @@ export default function DashboardPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePagination
+              component="div"
+              count={issuesData?.total || 0}
+              page={page}
+              onPageChange={(_, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50]}
+              labelRowsPerPage="表示件数:"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} / ${count !== -1 ? count : `${to}+`}件`
+              }
+            />
           )}
         </CardContent>
       </Card>
