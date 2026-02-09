@@ -9,7 +9,7 @@ import sys
 
 # --- 設定 ---
 RESEND_API_KEY = "re_4KHgS6FR_F9yQuTmXU5T5n8WunAs9gHiB"
-FROM_ADDRESS = "info@kintai-sensei.com"
+FROM_ADDRESS = "onboarding@resend.dev"  # Resend無料テストドメイン（独自ドメイン不要）
 FROM_NAME = "勤怠先生"
 TEST_TO = "taka52208@gmail.com"
 

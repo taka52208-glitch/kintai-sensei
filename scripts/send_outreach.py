@@ -19,7 +19,7 @@ from pathlib import Path
 
 # --- 設定 ---
 RESEND_API_KEY = "re_4KHgS6FR_F9yQuTmXU5T5n8WunAs9gHiB"
-FROM_ADDRESS = "info@kintai-sensei.com"
+FROM_ADDRESS = "onboarding@resend.dev"  # Resend無料テストドメイン（独自ドメイン不要）
 FROM_NAME = "勤怠先生"
 SENDER_NAME = "（あなたの名前）"  # ← 送信前に変更
 
