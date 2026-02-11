@@ -13,6 +13,13 @@
 - [x] Phase 9: 品質監査＋セキュリティ強化（19件修正）
 - [x] Phase 10: 本番DB移行（Neon PostgreSQL＋日次バックアップ）
 - [ ] Phase 11: 初期顧客獲得（目標10社）→ トラッカー: docs/PHASE1_TRACKER.md
+  - [x] OGP/Twitter Card/JSON-LD/favicon追加（2/11）
+  - [x] メール営業基盤 Gmail SMTP化（2/11）
+  - [x] 営業メール初回送信6件（社労士3・団体2・メディア1）（2/11）
+  - [ ] X(Twitter)ローンチ投稿6本
+  - [ ] note記事2本投稿
+  - [ ] GA4計測ID設定
+  - [ ] モニター募集（知人5名以上）
 
 ---
 

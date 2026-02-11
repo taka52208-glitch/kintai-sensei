@@ -2,7 +2,7 @@
 
 > 期間: 2026年2月〜4月（3ヶ月間）
 > 目標: 最初の10社を獲得
-> 最終更新: 2026-02-09
+> 最終更新: 2026-02-11
 
 ---
 
@@ -67,12 +67,36 @@
 
 > テンプレート: `docs/content/monitor-recruitment.md`
 
+### 営業メール送信（2/11実施）
+
+| # | 送信先 | type | ステータス |
+|---|--------|------|-----------|
+| 1 | kawasaki@leaf-sr.jp（リーフレイバーコンサルティング） | 社労士 | 送信済 |
+| 2 | info@1roumshi.com（高山社会保険労務士事務所） | 社労士 | 送信済 |
+| 3 | info@threeprosper.com（スリープロス社会保険労務士事務所） | 社労士 | 送信済 |
+| 4 | info@shokudanren.jp（日本飲食団体連合会） | 団体 | 送信済 |
+| 5 | jf_jigyou@jfnet.or.jp（日本フードサービス協会） | 団体 | 送信済 |
+| 6 | public-relations@synchro-food.co.jp（飲食店ドットコム） | メディア | 送信済 |
+
+> 送信方法: Gmail SMTP（taka52208@gmail.com）
+> 送信ログ: `scripts/send_log_20260211_233754.csv`
+
+### 技術改善（2/11実施）
+
+- [x] OGP画像・メタタグ追加（SNSシェア最適化）
+- [x] Twitter Card（summary_large_image）対応
+- [x] JSON-LD構造化データ（Schema.org SoftwareApplication）
+- [x] ブランドfavicon「勤」に差替え（Viteデフォルトから）
+- [x] canonical URL設定
+- [x] メール送信スクリプト Gmail SMTP対応に切替
+
 ### やること
 
-- [ ] X(Twitter)にローンチ投稿（投稿1）を投稿
+- [ ] X(Twitter)にローンチ投稿（投稿1〜6）を投稿
 - [ ] note記事2本を投稿
 - [ ] 知人リストを作成し、モニター案内を5名以上に送信
 - [ ] GA4の計測IDをVercelに設定（VITE_GA_ID）
+- [ ] 営業メール返信への対応・フォローアップ
 
 ---
 
@@ -186,4 +210,4 @@
 ---
 
 *判定日: 2026年5月初旬*
-*最終更新: 2026-02-09*
+*最終更新: 2026-02-11*
