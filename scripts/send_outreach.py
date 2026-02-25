@@ -10,44 +10,54 @@ CSVフォーマット:
     name,email,company,type
     川崎潤一,kawasaki@leaf-sr.jp,リーフレイバー,sharoushi
     ご担当者,info@shokudanren.jp,食団連,association
+    オーナー,info@example-izakaya.com,居酒屋○○,restaurant
 
-type: sharoushi（社労士）/ association（業界団体）/ media（メディア）/ monitor（モニター募集）
+type: sharoushi / sharoushi_pivot / association / media / monitor / restaurant / followup
 """
 import csv
-import resend
+import smtplib
 import time
 import sys
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
 
 # --- 設定 ---
-RESEND_API_KEY = "re_4KHgS6FR_F9yQuTmXU5T5n8WunAs9gHiB"
-FROM_ADDRESS = "onboarding@resend.dev"  # Resend無料テストドメイン（独自ドメイン不要）
+GMAIL_ADDRESS = "taka52208@gmail.com"
+GMAIL_APP_PASSWORD = "yivy ksza liok cxzr"
 FROM_NAME = "勤怠先生"
 SENDER_NAME = "勤怠先生 開発チーム"
-REPLY_TO = "taka52208@gmail.com"
+REPLY_TO = GMAIL_ADDRESS
 
-# Resend無料枠の制限
-DAILY_LIMIT = 100
+# Gmail制限
+DAILY_LIMIT = 500
 DELAY_SECONDS = 2  # 送信間隔（秒）
-
-resend.api_key = RESEND_API_KEY
 
 # --- 件名 ---
 SUBJECTS = {
     "sharoushi": "【ご連携のご相談】飲食店向け勤怠チェックツール「勤怠先生」のご紹介",
+    "sharoushi_pivot": "【新機能のご案内】社労士向け「予防労務」ツールとしてリニューアルしました - 勤怠先生",
     "association": "【ご紹介】飲食業界向け勤怠チェックシステム「勤怠先生」について",
     "media": "【掲載・連携のご相談】飲食業界特化の勤怠チェックシステム「勤怠先生」",
     "monitor": "【ご協力のお願い】飲食店向け勤怠チェックツール「勤怠先生」無料モニター募集",
+    "restaurant": "{company}様 - 勤怠データの労務リスク、無料で診断しませんか？",
+    "followup": "Re: 勤怠チェックシステム「勤怠先生」のご紹介（再送）",
 }
 
-# --- 共通フッター ---
+# --- 共通フッター（特定電子メール法準拠） ---
 FOOTER = """\
 <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;">
 <p style="color: #999; font-size: 11px;">
   勤怠先生 - 飲食業界特化の勤怠チェックシステム<br>
   https://kintai-sensei.vercel.app<br>
-  ※返信は {reply_to} まで直接お送りください。<br>
+  <br>
+  【送信者情報】<br>
+  勤怠先生 開発チーム（個人開発）<br>
+  連絡先: {reply_to}<br>
+  <br>
+  ※このメールは、貴社Webサイトで公開されている連絡先宛にお送りしています。<br>
+  ※今後のメール配信を希望されない場合は {reply_to} まで「配信停止」とご返信ください。<br>
   ※このメールに心当たりがない場合は、お手数ですがそのまま破棄してください。
 </p>
 </div>
@@ -286,11 +296,153 @@ TEMPLATE_MONITOR = """\
 <p>{sender_name}</p>
 """
 
+# --- 飲食企業向けテンプレート（エンドユーザー直接アプローチ） ---
+TEMPLATE_RESTAURANT = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8; color: #333;">
+
+<p>{recipient_name}様</p>
+
+<p>突然のご連絡失礼いたします。{sender_name}と申します。</p>
+
+<p>飲食業界で勤怠管理のお手伝いをしており、{company}様のことを拝見してご連絡いたしました。</p>
+
+<p style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px 16px; margin: 16px 0;">
+  <strong>ご存知でしょうか？</strong><br>
+  飲食業は労基署の重点調査対象業種で、<strong>是正勧告を受けた場合の対応コストは数十万円以上</strong>になることもあります。<br>
+  しかし、普段の勤怠データに潜むリスクは、忙しい現場ではなかなか気づけません。
+</p>
+
+<p><strong>御社の勤怠CSVを1回アップロードするだけ</strong>で、以下を自動チェックします。</p>
+
+<ul style="padding-left: 20px;">
+  <li>残業時間の上限超過リスク</li>
+  <li>休憩未取得・打刻漏れ</li>
+  <li>深夜労働・連勤の法令違反の可能性</li>
+</ul>
+
+<p><strong>10名以下の店舗は永久無料</strong>、それ以上でも月額980円からです。</p>
+
+<p>もしご興味があれば、<strong>このメールに「詳しく」とだけご返信ください</strong>。詳細をお送りいたします。</p>
+
+<p>お忙しいところ恐れ入ります。</p>
+
+<p>{sender_name}</p>
+"""
+
+# --- フォローアップテンプレート（全type共通） ---
+TEMPLATE_FOLLOWUP = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+
+<p>{recipient_name}様</p>
+
+<p>先日、飲食業界特化の勤怠チェックシステム「<strong>勤怠先生</strong>」についてご連絡いたしました、{sender_name}です。</p>
+
+<p>お忙しいところ恐れ入りますが、ご確認いただけましたでしょうか。</p>
+
+<p>改めて要点のみお伝えいたします。</p>
+
+<ul>
+  <li>既存の勤怠CSVを取り込むだけで<strong>8種類の異常を自動検知</strong></li>
+  <li>労基署対応の<strong>是正理由文をAIが自動生成</strong>（市場唯一の機能）</li>
+  <li><strong>10名以下は永久無料</strong>、初期費用0円</li>
+</ul>
+
+<p style="text-align: center; margin: 24px 0;">
+  <a href="https://kintai-sensei.vercel.app"
+     style="background: #1976d2; color: white; padding: 12px 32px;
+            text-decoration: none; border-radius: 4px; font-weight: bold;">
+    無料で試してみる
+  </a>
+</p>
+
+<p>ご興味がなければご返信不要です。少しでも気になる点がございましたら、お気軽に <strong>{reply_to}</strong> までご連絡ください。</p>
+
+<p>よろしくお願いいたします。</p>
+
+<p>{sender_name}</p>
+"""
+
+# --- 社労士ピボット再アプローチテンプレート ---
+TEMPLATE_SHAROUSHI_PIVOT = """\
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+
+<p>{recipient_name}様</p>
+
+<p>以前ご連絡いたしました、「勤怠先生」の{sender_name}です。</p>
+
+<p>前回は飲食店向けツールとしてご紹介いたしましたが、その後<strong>社労士の先生方のワークフローに特化した「予防労務ツール」</strong>として大幅にリニューアルいたしました。改めてご案内させてください。</p>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">何が変わったか</h3>
+
+<p>先生方が日常的に行っている<strong>「顧問先の勤怠データを確認し、問題があれば是正対応する」</strong>という業務を、そのまま効率化する設計に変更しました。</p>
+
+<table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
+  <tr style="background: #e3f2fd;">
+    <td style="border: 1px solid #ddd; padding: 8px; width: 40%;"><strong>以前（飲食店向け）</strong></td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>今回（社労士向け）</strong></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">飲食店オーナーが自分で使う</td>
+    <td style="border: 1px solid #ddd; padding: 8px;">先生方が顧問先の勤怠を一括チェック</td>
+  </tr>
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;">異常検知のみ</td>
+    <td style="border: 1px solid #ddd; padding: 8px;">異常検知＋<strong>是正理由文の自動生成</strong></td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;">独自形式のCSV</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>ジョブカン・KING OF TIME・Airシフト</strong>のCSVをそのまま取り込み</td>
+  </tr>
+</table>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">先生方のメリット</h3>
+
+<ul>
+  <li><strong>是正勧告の予防</strong>：顧問先の勤怠リスクを毎月チェック→問題を事前に潰せる</li>
+  <li><strong>是正理由文の工数削減</strong>：Wordでの文書作成が不要に。AIが法令に沿った理由文を生成</li>
+  <li><strong>顧問先への付加価値</strong>：「予防労務レポート」の定期提供で差別化</li>
+</ul>
+
+<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 4px;">料金（社労士事務所向け）</h3>
+
+<table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>お試し</strong></td>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>無料</strong>（顧問先3社まで）</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>ライト</strong></td>
+    <td style="border: 1px solid #ddd; padding: 8px;">月額4,980円（顧問先10社まで）</td>
+  </tr>
+  <tr style="background: #f5f5f5;">
+    <td style="border: 1px solid #ddd; padding: 8px;"><strong>スタンダード</strong></td>
+    <td style="border: 1px solid #ddd; padding: 8px;">月額9,800円（顧問先無制限）</td>
+  </tr>
+</table>
+
+<p style="text-align: center; margin: 24px 0;">
+  <a href="https://kintai-sensei.vercel.app"
+     style="background: #1976d2; color: white; padding: 12px 32px;
+            text-decoration: none; border-radius: 4px; font-weight: bold;">
+    無料で試してみる（顧問先3社まで）
+  </a>
+</p>
+
+<p>お忙しいところ恐れ入ります。もしご興味がございましたら、<strong>このメールにご返信いただくだけ</strong>で結構です。デモのご案内をいたします。</p>
+
+<p>よろしくお願いいたします。</p>
+
+<p>{sender_name}</p>
+"""
+
 TEMPLATES = {
     "sharoushi": TEMPLATE_SHAROUSHI,
+    "sharoushi_pivot": TEMPLATE_SHAROUSHI_PIVOT,
     "association": TEMPLATE_ASSOCIATION,
     "media": TEMPLATE_MEDIA,
     "monitor": TEMPLATE_MONITOR,
+    "restaurant": TEMPLATE_RESTAURANT,
+    "followup": TEMPLATE_FOLLOWUP,
 }
 
 
@@ -331,25 +483,36 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
     print(f"\n{'='*60}")
     print(f"営業メール {'ドライラン' if dry_run else '送信'}")
     print(f"送信件数: {total}")
-    print(f"送信元: {FROM_NAME} <{FROM_ADDRESS}>")
-    print(f"返信先: {REPLY_TO}")
+    print(f"送信元: {FROM_NAME} <{GMAIL_ADDRESS}>")
     print(f"{'='*60}\n")
 
     log_file = Path(f"scripts/send_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+
+    smtp = None
+    if not dry_run:
+        smtp = smtplib.SMTP("smtp.gmail.com", 587)
+        smtp.starttls()
+        smtp.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+        print("Gmail SMTP接続成功\n")
+
     with open(log_file, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["timestamp", "name", "email", "company", "type", "status", "email_id"])
+        writer.writerow(["timestamp", "name", "email", "company", "type", "status", "detail"])
 
         for i, r in enumerate(recipients, 1):
             template = TEMPLATES[r["type"]]
             subject = SUBJECTS[r["type"]]
+            # 件名の{company}をパーソナライズ
+            if "{company}" in subject:
+                subject = subject.replace("{company}", r.get("company", ""))
             html = template.format(
                 recipient_name=r["name"],
                 sender_name=SENDER_NAME,
                 reply_to=REPLY_TO,
+                company=r.get("company", ""),
             ) + FOOTER.format(reply_to=REPLY_TO)
 
-            type_label = {"sharoushi": "社労士", "association": "団体", "media": "メディア", "monitor": "モニター"}
+            type_label = {"sharoushi": "社労士", "sharoushi_pivot": "社労士再", "association": "団体", "media": "メディア", "monitor": "モニター", "restaurant": "飲食企業"}
             print(f"[{i}/{total}] [{type_label.get(r['type'], r['type'])}] {r['name']} <{r['email']}>", end=" ")
 
             if dry_run:
@@ -361,19 +524,17 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
                 continue
 
             try:
-                params: resend.Emails.SendParams = {
-                    "from": f"{FROM_NAME} <{FROM_ADDRESS}>",
-                    "to": [r["email"]],
-                    "reply_to": REPLY_TO,
-                    "subject": subject,
-                    "html": html,
-                }
-                result = resend.Emails.send(params)
-                email_id = result["id"]
-                print(f"送信成功 (ID: {email_id})")
+                msg = MIMEMultipart("alternative")
+                msg["From"] = f"{FROM_NAME} <{GMAIL_ADDRESS}>"
+                msg["To"] = r["email"]
+                msg["Subject"] = subject
+                msg["Reply-To"] = REPLY_TO
+                msg.attach(MIMEText(html, "html", "utf-8"))
+                smtp.sendmail(GMAIL_ADDRESS, r["email"], msg.as_string())
+                print("送信成功")
                 writer.writerow([
                     datetime.now().isoformat(), r["name"], r["email"],
-                    r["company"], r["type"], "sent", email_id,
+                    r["company"], r["type"], "sent", "ok",
                 ])
             except Exception as e:
                 print(f"送信失敗: {e}")
@@ -384,6 +545,9 @@ def send_outreach(recipients: list[dict], dry_run: bool = True) -> None:
 
             if i < total:
                 time.sleep(DELAY_SECONDS)
+
+    if smtp:
+        smtp.quit()
 
     print(f"\n送信ログ: {log_file}")
 
@@ -398,7 +562,7 @@ def main():
         print("  name,email,company,type")
         print("  川崎潤一,kawasaki@leaf-sr.jp,リーフレイバー,sharoushi")
         print("")
-        print("type: sharoushi / association / media / monitor")
+        print("type: sharoushi / sharoushi_pivot / association / media / monitor / restaurant / followup")
         sys.exit(0)
 
     csv_path = sys.argv[1]

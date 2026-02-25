@@ -29,21 +29,21 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 const features = [
   {
     icon: <SearchIcon sx={{ fontSize: 48 }} />,
-    title: '8種類の異常を自動検知',
+    title: '顧問先の勤怠異常を自動検知',
     description:
-      '打刻漏れ、休憩不足、長時間労働、深夜勤務、時刻不整合など、労基法に関わる8つのルールでCSVデータを自動チェック。',
+      '打刻漏れ、休憩不足、長時間労働、深夜勤務など8つのルールで、顧問先企業の勤怠CSVを自動チェック。ジョブカン・KING OF TIME・Airシフトに対応。',
   },
   {
     icon: <AutoFixHighIcon sx={{ fontSize: 48 }} />,
     title: 'AIが是正理由文を自動生成',
     description:
-      '検知した異常に対し、原因・対応・再発防止を組み合わせた是正理由文をAIが生成。社内記録用・本人確認用・監査向けの3種類に対応。',
+      '検知した異常に対し、原因・対応・再発防止を組み合わせた是正理由文をAIが生成。Wordでの文書作成工数を大幅に削減できます。',
   },
   {
     icon: <AssessmentIcon sx={{ fontSize: 48 }} />,
-    title: '監査対応レポートを即時出力',
+    title: '顧問先別レポートを一括出力',
     description:
-      '月次レポートをCSV/PDFで出力。個人情報マスク機能付きで、労基署への提出資料もワンクリック。',
+      '顧問先企業ごとの月次レポートをCSV/PDFで出力。個人情報マスク機能付きで、臨検対策の証跡としても活用できます。',
   },
 ];
 
@@ -51,33 +51,33 @@ const steps = [
   {
     icon: <UploadFileIcon sx={{ fontSize: 40 }} />,
     step: 'STEP 1',
-    title: 'CSVをアップロード',
-    description: 'ジョブカン・Airシフト・汎用CSVに対応。ドラッグ&ドロップで取り込み完了。',
+    title: '顧問先のCSVを取り込み',
+    description: 'ジョブカン・KING OF TIME・Airシフト・汎用CSVに対応。顧問先ごとにデータを管理。',
   },
   {
     icon: <FindInPageIcon sx={{ fontSize: 40 }} />,
     step: 'STEP 2',
     title: '異常を自動検知',
-    description: '8種類のルールで瞬時にチェック。重要度・種別ごとに一覧表示。',
+    description: '8種類のルールで瞬時にチェック。重要度・種別ごとに一覧表示。複数企業を横断管理。',
   },
   {
     icon: <DescriptionIcon sx={{ fontSize: 40 }} />,
     step: 'STEP 3',
     title: '是正理由文を生成',
-    description: '原因と対応を選ぶだけ。AIが自然な日本語の是正理由文を生成します。',
+    description: '原因と対応を選ぶだけ。Wordでの文書作成が不要に。顧問先への報告書もワンクリック。',
   },
 ];
 
 const plans = [
   {
-    name: 'フリー',
+    name: 'お試し',
     price: '0',
     unit: '円',
     period: '',
-    target: '10名以下の小規模店舗',
+    target: '顧問先3社まで',
     features: [
       '全8ルールで異常検知',
-      '是正理由文 月5件まで',
+      '是正理由文 月3件まで',
       'CSVレポート出力',
       'メールサポート',
       'データ保持 12ヶ月',
@@ -86,11 +86,11 @@ const plans = [
     highlight: false,
   },
   {
-    name: 'スタンダード',
-    price: '300',
-    unit: '円/人',
-    period: '（税抜）',
-    target: '50名以下のチェーン店',
+    name: 'ライト',
+    price: '4,980',
+    unit: '円/月',
+    period: '（税込）',
+    target: '顧問先10社までの個人事務所',
     features: [
       '全8ルールで異常検知',
       '是正理由文 無制限',
@@ -103,17 +103,17 @@ const plans = [
     highlight: true,
   },
   {
-    name: 'プロ',
-    price: '500',
-    unit: '円/人',
-    period: '（税抜）',
-    target: '大規模チェーン・FC本部',
+    name: 'スタンダード',
+    price: '9,800',
+    unit: '円/月',
+    period: '（税込）',
+    target: '顧問先無制限の社労士法人',
     features: [
       '全ルール + カスタムルール',
       '是正理由文 無制限 + テンプレカスタム',
       'CSV + PDF + API出力',
-      '業態別プリセット',
-      '専任サポート担当',
+      '業種別検知プリセット',
+      '複数スタッフID対応',
       'データ保持 無制限',
     ],
     cta: 'お問い合わせ',
@@ -125,17 +125,17 @@ const strengths = [
   {
     icon: <SecurityIcon sx={{ fontSize: 36, color: 'primary.main' }} />,
     title: 'セキュリティ',
-    description: 'JWT認証、権限制御、ブルートフォース対策、個人情報マスク機能を標準装備。',
+    description: 'JWT認証、権限制御、ブルートフォース対策、個人情報マスク機能を標準装備。顧問先の従業員データを安全に管理。',
   },
   {
     icon: <SpeedIcon sx={{ fontSize: 36, color: 'primary.main' }} />,
-    title: '初期費用0円・即日利用開始',
-    description: 'クレジットカード不要で無料プランをすぐに利用開始。有料プランも初期費用0円。',
+    title: '既存の勤怠SaaSと連携',
+    description: 'ジョブカン・KING OF TIME・AirシフトのCSVをそのまま取り込み。既存システムを変更する必要はありません。',
   },
   {
     icon: <SupportAgentIcon sx={{ fontSize: 36, color: 'primary.main' }} />,
-    title: '飲食業界に特化',
-    description: 'シフト制・変形労働時間制・深夜勤務など、飲食店特有の勤怠パターンに対応した検知ルール。',
+    title: '是正対応の工数を1/3に',
+    description: 'Wordでの文書作成が不要に。是正理由文の生成からレポート出力まで、すべてクラウドで完結。',
   },
 ];
 
@@ -202,7 +202,7 @@ export default function LandingPage() {
               lineHeight: 1.4,
             }}
           >
-            飲食店の勤怠異常、
+            顧問先の勤怠異常、
             <br />
             見逃していませんか？
           </Typography>
@@ -216,15 +216,15 @@ export default function LandingPage() {
               lineHeight: 1.8,
             }}
           >
-            CSVを取り込むだけで休憩不足・長時間労働・打刻漏れを自動検知。
+            顧問先のジョブカン・KING OF TIMEデータを取り込むだけで、勤怠異常を自動検知。
             <br />
-            さらに、労基署対応の是正理由文までAIが自動生成。
+            さらに、是正理由文までAIが自動生成。Wordでの文書作成はもう不要です。
           </Typography>
           <Typography
             variant="body2"
             sx={{ mb: 4, opacity: 0.85, fontWeight: 600 }}
           >
-            「検知して終わり」ではなく「対応まで完結」する、飲食業界唯一の勤怠チェックシステム。
+            社労士のための予防労務ツール。是正勧告を受ける前に、異常を検知し対応を完結。
           </Typography>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
@@ -264,7 +264,7 @@ export default function LandingPage() {
             </Button>
           </Stack>
           <Typography variant="caption" sx={{ mt: 2, display: 'block', opacity: 0.8 }}>
-            初期費用0円 / クレジットカード不要 / 10名以下ずっと無料
+            初期費用0円 / クレジットカード不要 / 顧問先3社までずっと無料
           </Typography>
         </Container>
       </Box>
@@ -277,7 +277,7 @@ export default function LandingPage() {
           textAlign="center"
           sx={{ mb: 1, fontSize: { xs: '1.3rem', md: '1.5rem' } }}
         >
-          勤怠先生の3つの特長
+          社労士の業務を変える3つの特長
         </Typography>
         <Typography
           variant="body2"
@@ -285,7 +285,7 @@ export default function LandingPage() {
           color="text.secondary"
           sx={{ mb: 6 }}
         >
-          異常の検知から是正理由文の作成まで、ワンストップで対応
+          顧問先の勤怠チェックから是正理由文の作成まで、ワンストップで完結
         </Typography>
         <Grid container spacing={4}>
           {features.map((f) => (
@@ -331,7 +331,7 @@ export default function LandingPage() {
             color="text.secondary"
             sx={{ mb: 6 }}
           >
-            専門知識は不要。CSVをアップロードするだけで始められます
+            顧問先の勤怠SaaSからCSVを取り込むだけ。最短30秒で異常検知が完了
           </Typography>
           <Grid container spacing={4} alignItems="stretch">
             {steps.map((s) => (
@@ -403,7 +403,7 @@ export default function LandingPage() {
             color="text.secondary"
             sx={{ mb: 6 }}
           >
-            10名以下は無料。まずはフリープランでお試しください
+            顧問先3社まで無料。まずはお試しプランで始めてみませんか
           </Typography>
           <Grid container spacing={3} justifyContent="center">
             {plans.map((p) => (
@@ -492,7 +492,7 @@ export default function LandingPage() {
             color="text.secondary"
             sx={{ mt: 3 }}
           >
-            ※ アクティブ従業員数（当月に勤怠データが1件以上ある従業員数）に基づき算定
+            ※ 顧問先企業数は、勤怠データが1件以上登録されている企業数に基づき算定
           </Typography>
         </Container>
       </Box>
@@ -512,10 +512,10 @@ export default function LandingPage() {
             fontWeight={700}
             sx={{ mb: 2, fontSize: { xs: '1.2rem', md: '1.5rem' } }}
           >
-            まずは無料で、勤怠データをチェックしてみませんか？
+            顧問先の勤怠データ、まず1社チェックしてみませんか？
           </Typography>
           <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
-            10名以下なら、ずっと無料。初期費用0円・クレジットカード不要で今すぐ始められます。
+            顧問先3社まで無料。初期費用0円・クレジットカード不要で今すぐ始められます。
           </Typography>
           <Button
             variant="contained"
@@ -559,9 +559,9 @@ export default function LandingPage() {
                 勤怠先生
               </Typography>
               <Typography variant="caption" lineHeight={1.8}>
-                飲食業界特化の勤怠異常検知＋
+                社労士のための予防労務ツール
                 <br />
-                AI是正理由文生成サービス
+                勤怠異常検知＋AI是正理由文生成
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, sm: 4 }}>

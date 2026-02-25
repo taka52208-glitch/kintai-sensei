@@ -40,9 +40,9 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 }
 
 const PLAN_LABELS: Record<string, { label: string; color: 'default' | 'primary' | 'secondary' }> = {
-  free: { label: 'Free', color: 'default' },
-  standard: { label: 'Standard', color: 'primary' },
-  pro: { label: 'Pro', color: 'secondary' },
+  free: { label: 'お試し', color: 'default' },
+  standard: { label: 'ライト', color: 'primary' },
+  pro: { label: 'スタンダード', color: 'secondary' },
 };
 
 export default function SettingsPage() {
@@ -355,10 +355,10 @@ export default function SettingsPage() {
                     <Card variant="outlined">
                       <CardContent>
                         <Typography variant="body2" color="text.secondary">
-                          従業員数
+                          顧問先数
                         </Typography>
                         <Typography variant="h5">
-                          {planData.employee_count} / {planData.employee_limit}名
+                          {planData.client_count} / {planData.client_limit}社
                         </Typography>
                       </CardContent>
                     </Card>
@@ -379,10 +379,10 @@ export default function SettingsPage() {
                       borderWidth: planData.plan === 'free' ? 2 : 1,
                     }}>
                       <CardContent>
-                        <Typography variant="h6">Free</Typography>
+                        <Typography variant="h6">お試し</Typography>
                         <Typography variant="h4" fontWeight={700}>¥0</Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          10名まで・基本機能
+                          顧問先3社まで・基本機能
                         </Typography>
                         {planData.plan === 'free' && (
                           <Chip icon={<CheckCircleIcon />} label="現在のプラン" color="primary" size="small" />
@@ -398,10 +398,10 @@ export default function SettingsPage() {
                       borderWidth: planData.plan === 'standard' ? 2 : 1,
                     }}>
                       <CardContent>
-                        <Typography variant="h6">Standard</Typography>
-                        <Typography variant="h4" fontWeight={700}>¥300<Typography component="span" variant="body2">/人月</Typography></Typography>
+                        <Typography variant="h6">ライト</Typography>
+                        <Typography variant="h4" fontWeight={700}>¥4,980<Typography component="span" variant="body2">/月</Typography></Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          50名まで・全機能
+                          顧問先10社まで・全機能
                         </Typography>
                         {planData.plan === 'standard' ? (
                           <Chip icon={<CheckCircleIcon />} label="現在のプラン" color="primary" size="small" />
@@ -439,10 +439,10 @@ export default function SettingsPage() {
                       borderWidth: planData.plan === 'pro' ? 2 : 1,
                     }}>
                       <CardContent>
-                        <Typography variant="h6">Pro</Typography>
-                        <Typography variant="h4" fontWeight={700}>¥500<Typography component="span" variant="body2">/人月</Typography></Typography>
+                        <Typography variant="h6">スタンダード</Typography>
+                        <Typography variant="h4" fontWeight={700}>¥9,800<Typography component="span" variant="body2">/月</Typography></Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          無制限・優先サポート
+                          顧問先無制限・優先サポート
                         </Typography>
                         {planData.plan === 'pro' ? (
                           <Chip icon={<CheckCircleIcon />} label="現在のプラン" color="secondary" size="small" />

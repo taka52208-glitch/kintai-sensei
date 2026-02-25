@@ -9,8 +9,7 @@ from src.config import settings
 from src.core.database import get_db
 from src.core.auth import get_current_user
 from src.models.user import User
-from src.models.store import Organization, PlanType
-from src.models.employee import Employee
+from src.models.store import Organization, Store, PlanType
 from src.schemas.billing import (
     PlanInfo,
     CreateCheckoutRequest,
@@ -21,8 +20,8 @@ from src.schemas.billing import (
 router = APIRouter()
 
 PLAN_LIMITS = {
-    PlanType.FREE.value: 10,
-    PlanType.STANDARD.value: 50,
+    PlanType.FREE.value: 3,
+    PlanType.STANDARD.value: 10,
     PlanType.PRO.value: 9999,
 }
 
@@ -44,18 +43,18 @@ async def get_current_plan(
     if not org:
         raise HTTPException(status_code=404, detail="組織が見つかりません")
 
-    # 従業員数カウント
+    # 顧問先数カウント
     count_result = await db.execute(
-        select(func.count(Employee.id)).where(
-            Employee.organization_id == org.id
+        select(func.count(Store.id)).where(
+            Store.organization_id == org.id
         )
     )
-    employee_count = count_result.scalar() or 0
+    client_count = count_result.scalar() or 0
 
     return PlanInfo(
         plan=org.plan,
-        employee_limit=org.employee_limit,
-        employee_count=employee_count,
+        client_limit=org.client_limit,
+        client_count=client_count,
         stripe_customer_id=org.stripe_customer_id,
         stripe_subscription_id=org.stripe_subscription_id,
     )
@@ -177,7 +176,7 @@ async def _handle_checkout_completed(session: dict, db: AsyncSession):
     plan, limit = _resolve_plan(price_id)
     org.stripe_subscription_id = subscription_id
     org.plan = plan
-    org.employee_limit = limit
+    org.client_limit = limit
     await db.flush()
 
 
@@ -198,7 +197,7 @@ async def _handle_subscription_updated(subscription: dict, db: AsyncSession):
     plan, limit = _resolve_plan(price_id)
     org.stripe_subscription_id = subscription["id"]
     org.plan = plan
-    org.employee_limit = limit
+    org.client_limit = limit
     await db.flush()
 
 
@@ -217,7 +216,7 @@ async def _handle_subscription_deleted(subscription: dict, db: AsyncSession):
 
     org.stripe_subscription_id = None
     org.plan = PlanType.FREE.value
-    org.employee_limit = PLAN_LIMITS[PlanType.FREE.value]
+    org.client_limit = PLAN_LIMITS[PlanType.FREE.value]
     await db.flush()
 
 

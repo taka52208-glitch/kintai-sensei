@@ -11,6 +11,7 @@ from src.core.database import get_db
 from src.core.auth import AdminUser
 from src.models.store import Store
 from src.schemas.store import StoreResponse, StoreCreate, StoreUpdate, StoreListResponse
+from src.services.plan_limits import check_client_limit
 
 
 router = APIRouter()
@@ -73,6 +74,14 @@ async def create_store(
     current_user: AdminUser,
 ):
     """店舗作成（管理者のみ）"""
+    # 顧問先数制限チェック
+    allowed, message = await check_client_limit(db, current_user.organization_id)
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=message,
+        )
+
     # コード重複チェック
     result = await db.execute(
         select(Store)

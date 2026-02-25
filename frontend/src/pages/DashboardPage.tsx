@@ -132,7 +132,7 @@ export default function DashboardPage() {
   const issues: Issue[] = issuesData?.items || [];
 
   const usagePercent = planData
-    ? Math.round((planData.employee_count / planData.employee_limit) * 100)
+    ? Math.round((planData.client_count / planData.client_limit) * 100)
     : 0;
 
   return (
@@ -152,9 +152,9 @@ export default function DashboardPage() {
             </Button>
           }
         >
-          従業員数: {planData.employee_count}/{planData.employee_limit}名
+          顧問先数: {planData.client_count}/{planData.client_limit}社
           {usagePercent >= 100
-            ? '（上限に達しています。新規従業員の追加にはプランのアップグレードが必要です）'
+            ? '（上限に達しています。顧問先の追加にはプランのアップグレードが必要です）'
             : '（まもなく上限に達します）'}
         </Alert>
       )}

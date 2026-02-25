@@ -15,7 +15,6 @@ from src.models.employee import Employee
 from src.models.store import Store
 from src.models.attendance import AttendanceRecord
 from src.services.detection import detect_issues
-from src.services.plan_limits import check_employee_limit
 
 
 router = APIRouter()
@@ -41,10 +40,32 @@ def parse_csv(content: bytes) -> pd.DataFrame:
     return df
 
 
+def detect_csv_format(columns: list[str]) -> str:
+    """CSVフォーマットを自動判定"""
+    col_set = set(columns)
+    # ジョブカン: 「スタッフコード」「スタッフ名」が特徴
+    if "スタッフコード" in col_set or "スタッフ名" in col_set:
+        return "jobcan"
+    # KING OF TIME: 「従業員コード」+「勤務日」が特徴
+    if "従業員コード" in col_set and "勤務日" in col_set:
+        return "king_of_time"
+    # KING OF TIME 別パターン: 「社員コード」+「勤務日」
+    if "社員コード" in col_set and "勤務日" in col_set:
+        return "king_of_time"
+    # Airシフト: 「従業員番号」「従業員名」が特徴
+    if "従業員番号" in col_set or "従業員名" in col_set:
+        return "airshift"
+    # SmartHR: 「社員ID」「社員名」が特徴
+    if "社員ID" in col_set or "社員名" in col_set:
+        return "smarthr"
+    return "generic"
+
+
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """カラム名を正規化（ジョブカン/Airシフト対応）"""
-    column_mapping = {
-        # ジョブカン
+    """カラム名を正規化（ジョブカン/KING OF TIME/Airシフト/SmartHR対応）"""
+    detected = detect_csv_format(list(df.columns))
+
+    column_mapping_jobcan = {
         "スタッフコード": "employee_code",
         "スタッフ名": "name",
         "日付": "date",
@@ -52,18 +73,63 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
         "退勤時刻": "clock_out",
         "休憩時間": "break_minutes",
         "勤務区分": "work_type",
-        # Airシフト
+    }
+
+    column_mapping_king_of_time = {
+        "従業員コード": "employee_code",
+        "社員コード": "employee_code",
+        "従業員名": "name",
+        "社員名": "name",
+        "氏名": "name",
+        "勤務日": "date",
+        "出勤時刻": "clock_in",
+        "退勤時刻": "clock_out",
+        "休憩分": "break_minutes",
+        "休憩時間": "break_minutes",
+        "勤務形態": "work_type",
+        "勤務区分": "work_type",
+    }
+
+    column_mapping_airshift = {
         "従業員番号": "employee_code",
         "従業員名": "name",
+        "日付": "date",
         "出勤": "clock_in",
         "退勤": "clock_out",
         "休憩": "break_minutes",
-        # 汎用
+    }
+
+    column_mapping_smarthr = {
+        "社員ID": "employee_code",
+        "社員名": "name",
+        "勤務日": "date",
+        "出勤": "clock_in",
+        "退勤": "clock_out",
+        "休憩": "break_minutes",
+    }
+
+    column_mapping_generic = {
         "employee_id": "employee_code",
         "employee_name": "name",
     }
 
-    df = df.rename(columns=column_mapping)
+    mapping = {
+        "jobcan": column_mapping_jobcan,
+        "king_of_time": column_mapping_king_of_time,
+        "airshift": column_mapping_airshift,
+        "smarthr": column_mapping_smarthr,
+        "generic": column_mapping_generic,
+    }
+
+    df = df.rename(columns=mapping.get(detected, column_mapping_generic))
+
+    # フォールバック: まだマッピングされていないカラムを汎用マッピングで再試行
+    if "employee_code" not in df.columns or "date" not in df.columns:
+        all_mappings = {}
+        for m in mapping.values():
+            all_mappings.update(m)
+        df = df.rename(columns=all_mappings)
+
     return df
 
 
@@ -176,13 +242,6 @@ async def upload_attendance(
         employee = result.scalar_one_or_none()
 
         if employee is None:
-            # プラン制限チェック
-            allowed, message = await check_employee_limit(db, current_user.organization_id)
-            if not allowed:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=message,
-                )
             employee = Employee(
                 organization_id=current_user.organization_id,
                 store_id=store_id if store_id else current_user.store_id,

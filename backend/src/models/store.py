@@ -28,7 +28,7 @@ class Organization(Base):
     plan: Mapped[str] = mapped_column(String(20), default=PlanType.FREE.value, nullable=False)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    employee_limit: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+    client_limit: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

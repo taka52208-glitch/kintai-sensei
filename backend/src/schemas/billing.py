@@ -6,8 +6,8 @@ from pydantic import BaseModel
 class PlanInfo(BaseModel):
     """現在のプラン情報"""
     plan: str
-    employee_limit: int
-    employee_count: int
+    client_limit: int
+    client_count: int
     stripe_customer_id: str | None = None
     stripe_subscription_id: str | None = None
 
@@ -34,5 +34,5 @@ class BillingPortalResponse(BaseModel):
 class PlanChangeResult(BaseModel):
     """プラン変更結果"""
     plan: str
-    employee_limit: int
+    client_limit: int
     message: str
